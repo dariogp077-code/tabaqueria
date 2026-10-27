@@ -1,0 +1,1165 @@
+<!DOCTYPE html>
+<!-- Revisión profunda v8: metas mensuales editables y modos gerencial/gestión diaria. Base: v7. -->
+<html lang="es" class="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Panel Tabaquerías — Ventas, gastos y utilidad</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js" onerror="window.__panelDependencyError && window.__panelDependencyError('XLSX para importar Excel')"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js" onerror="window.__panelDependencyError && window.__panelDependencyError('Chart.js para gráficos')"></script>
+<script>tailwind.config={darkMode:'class',theme:{extend:{fontFamily:{sans:['Inter','system-ui','sans-serif']}}}};</script>
+<style>
+  :root{--bg:#f3f4f9;--card:#fff;--card2:#f0f2f8;--border:rgba(15,20,40,.10);--text:#161a26;--dim:#566078;--dimmer:#8089a0;--grid:rgba(15,20,40,.08);--accent:#4f46e5;--pos:#047857;--neg:#be123c;--warn:#b45309;--shadow:0 1px 2px rgba(15,20,40,.05),0 10px 28px -14px rgba(15,20,40,.18);}
+  .dark{--bg:#0a0c12;--card:#10131c;--card2:#171b27;--border:rgba(255,255,255,.08);--text:#e8eaf0;--dim:#98a2b8;--dimmer:#69738a;--grid:rgba(255,255,255,.07);--accent:#818cf8;--pos:#34d399;--neg:#fb7185;--warn:#fbbf24;--shadow:0 1px 0 rgba(255,255,255,.03) inset,0 14px 34px -18px rgba(0,0,0,.65);}
+  html{scroll-behavior:smooth;}
+  body{background:var(--bg);color:var(--text);font-feature-settings:"tnum" 1,"cv05" 1;-webkit-font-smoothing:antialiased;}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:18px;box-shadow:var(--shadow);}
+  .dim{color:var(--dim);} .dimmer{color:var(--dimmer);} .pos{color:var(--pos);} .neg{color:var(--neg);} .warn{color:var(--warn);}
+  .lbl{display:block;font-size:11.5px;color:var(--dimmer);margin-bottom:4px;font-weight:500;}
+  .sel{background:var(--card2);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:8px 12px;font-size:13px;outline:none;min-width:120px;font-family:inherit;}
+  .sel:focus{border-color:var(--accent);}
+  .btn{display:inline-flex;align-items:center;gap:7px;font-size:13px;font-weight:600;border-radius:10px;padding:8px 14px;cursor:pointer;border:1px solid var(--border);background:var(--card2);color:var(--text);font-family:inherit;transition:filter .15s;}
+  .btn:hover{filter:brightness(1.12);}
+  .btn-primary{background:linear-gradient(95deg,#6366f1,#06b6d4);color:#fff;border-color:transparent;}
+  .grad{background:linear-gradient(95deg,#818cf8,#22d3ee);-webkit-background-clip:text;background-clip:text;color:transparent;}
+  .seg{display:inline-flex;background:var(--card2);border:1px solid var(--border);border-radius:12px;padding:3px;flex-wrap:wrap;}
+  .seg button{font-size:13px;font-weight:600;padding:7px 15px;border-radius:9px;color:var(--dim);cursor:pointer;border:none;background:transparent;font-family:inherit;}
+  .seg button.active{background:var(--card);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.25);}
+  .fcard{background:var(--card2);border:1px solid var(--border);border-radius:14px;padding:12px 14px;min-width:250px;flex:1;}
+  .badge{display:inline-block;font-size:10.5px;font-weight:700;border-radius:99px;padding:2px 9px;letter-spacing:.02em;}
+  .b-v{background:rgba(129,140,248,.18);color:#818cf8;} .b-g{background:rgba(251,191,36,.16);color:var(--warn);}
+  .chart-box{position:relative;height:290px;}
+  table.t{width:100%;border-collapse:collapse;font-size:13px;}
+  table.t th{text-align:left;font-weight:600;color:var(--dimmer);padding:10px 14px;border-bottom:1px solid var(--border);white-space:nowrap;font-size:12px;}
+  table.t td{padding:9px 14px;border-bottom:1px solid var(--border);white-space:nowrap;font-variant-numeric:tabular-nums;}
+  table.t tr:last-child td{border-bottom:none;}
+  table.t .r{text-align:right;} table.t th.r{text-align:right;}
+  table.t tfoot td{font-weight:700;background:var(--card2);}
+  details.aud{border:1px solid var(--border);border-radius:14px;background:var(--card);}
+  details.aud>summary{cursor:pointer;padding:13px 16px;font-weight:600;font-size:13.5px;list-style:none;display:flex;align-items:center;gap:10px;}
+  details.aud>summary::-webkit-details-marker{display:none;}
+  details.aud[open]>summary{border-bottom:1px solid var(--border);}
+  .drop-active{border-color:#818cf8 !important;background:rgba(129,140,248,.08) !important;}
+  ::-webkit-scrollbar{height:8px;width:8px;} ::-webkit-scrollbar-thumb{background:var(--border);border-radius:99px;}
+  @media (prefers-reduced-motion: reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+  body.presentation-mode #managementHub{border-width:2px}
+  body.presentation-mode .chart-box{height:340px}
+  @media print {
+    body{background:#fff!important;color:#111!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    nav,#navAdd,#restoreBtn,#themeToggle,#clearBtn,#fileInput,#emptyState,#exportBar,#scopeBar,#tabs,#errBox,#infoBox,button,select,input[type=checkbox],#authModal{display:none!important}
+    #dash{display:block!important;max-width:none!important;padding:0!important;margin:0!important}
+    #tabVentas,#tabGastos,#tabAudit{break-inside:avoid}
+    .card,details.aud{box-shadow:none!important;border:1px solid #ddd!important;background:#fff!important;color:#111!important;break-inside:avoid}
+    .dim,.dimmer,.lbl{color:#444!important}
+    table.t th,table.t td{color:#111!important;border-color:#ddd!important}
+    .chart-box{height:230px!important}
+    body *{visibility:visible}
+  }
+</style>
+</head>
+<body class="min-h-screen">
+<div id="dependencyWarning" role="status" aria-live="polite" style="display:none;position:sticky;top:0;z-index:9999;padding:12px 16px;background:#fff3cd;color:#664d03;border-bottom:1px solid #ffecb5;font:14px/1.45 system-ui,sans-serif">
+<strong>Atención:</strong> No se pudo cargar una librería necesaria. Los gráficos o la importación de Excel pueden no funcionar. Verificá la conexión y abrí el archivo en un navegador actualizado (Safari o Chrome), no solo en la vista previa de WhatsApp/Archivos. Tus Excel originales no se modifican.
+</div>
+<script>window.__panelDependencyError=function(name){var b=document.getElementById('dependencyWarning');if(b){b.style.display='block';b.setAttribute('data-failed-library',name||'desconocida');b.insertAdjacentHTML('beforeend','<div style="margin-top:4px">Librería no disponible: '+String(name||'desconocida').replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})+'</div>');}};</script>
+
+
+<!-- MODAL DE ACCESO -->
+<div id="authModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-md bg-black/60">
+  <div class="card p-6 w-full max-w-md shadow-2xl">
+    <div class="text-center mb-6">
+      <span class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-400 to-cyan-400 inline-flex items-center justify-center text-[16px] font-extrabold text-slate-900 mb-2">P</span>
+      <h2 class="text-[18px] font-bold">Panel Tabaquerías</h2>
+      <p class="text-[12.5px] dim mt-1">Seleccioná tu perfil de acceso para continuar</p>
+    </div>
+    <div class="space-y-4">
+      <button onclick="cloudLogin('jefes')" class="w-full btn btn-primary justify-center py-3 text-[14px]">👥 Ingresar como Jefes (solo lectura)</button>
+      <div class="border-t border-[var(--border)] pt-4">
+        <label class="lbl">Contraseña de Administrador</label>
+        <input type="password" id="passInput" class="sel" style="width:100%" placeholder="••••••••" autocomplete="current-password">
+        <button onclick="cloudLogin('admin')" class="w-full btn justify-center mt-2">🔑 Ingresar como Administrador</button>
+      </div>
+      <p id="authError" class="text-[11.5px] neg hidden"></p>
+    </div>
+  </div>
+</div>
+
+<nav class="sticky top-0 z-30 flex items-center justify-between gap-4 px-5 py-3.5 backdrop-blur-xl" style="background:color-mix(in srgb,var(--bg) 82%,transparent);border-bottom:1px solid var(--border)">
+  <div class="flex items-center gap-2.5">
+    <span class="w-7 h-7 rounded-lg bg-gradient-to-br from-indigo-400 to-cyan-400 flex items-center justify-center text-[13px] font-extrabold text-slate-900">P</span>
+    <span class="text-[14px] font-semibold tracking-tight">Panel Tabaquerías</span>
+    <span id="roleBadge" class="badge b-v ml-2">Modo</span>
+  </div>
+  <div class="flex items-center gap-2">
+    <button id="publishBtn" class="btn hidden" title="Subir los datos a la nube para que los jefes los vean">☁ Publicar en la nube</button>
+    <button id="navAdd" class="btn btn-primary hidden">+ Cargar / actualizar archivos</button>
+    <button id="restoreBtn" class="btn hidden" title="Recuperar la copia de seguridad anterior">↶ Recuperar copia anterior</button>
+    <button id="themeToggle" class="btn" style="padding:8px 10px" title="Cambiar tema" aria-label="Cambiar tema">
+      <svg id="iconMoon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8z"/></svg>
+      <svg id="iconSun" class="hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+    </button>
+    <button onclick="logout()" class="btn" title="Cambiar de usuario">Salir</button>
+  </div>
+</nav>
+
+<input type="file" id="fileInput" accept=".xlsx,.xls" multiple class="hidden">
+<div id="infoBox" class="hidden max-w-[1320px] mx-5 xl:mx-auto mt-4 px-4 py-3 rounded-xl text-[13px] pos" style="background:color-mix(in srgb,var(--pos) 9%,transparent);border:1px solid color-mix(in srgb,var(--pos) 30%,transparent)"></div>
+<div id="errBox" class="hidden max-w-[1320px] mx-5 xl:mx-auto mt-4 px-4 py-3 rounded-xl text-[13px] neg" style="background:color-mix(in srgb,var(--neg) 10%,transparent);border:1px solid color-mix(in srgb,var(--neg) 35%,transparent)"></div>
+
+<!-- EMPTY -->
+<section id="emptyState" class="max-w-2xl mx-auto px-5 pt-16 pb-20 text-center">
+  <h1 class="text-[32px] sm:text-[40px] font-bold leading-tight mb-3">Tus <span class="grad">4 Excel</span>, convertidos<br>en un panel de datos reales</h1>
+  <p id="emptyTextDesc" class="dim text-[15px] leading-relaxed mb-8 max-w-lg mx-auto">Subí los Excel de <b>ventas</b> y de <b>gastos</b> de cada local. La app reconoce solos de qué local y de qué tipo es cada archivo, y muestra únicamente lo que está cargado: lo que falta aparece como "sin datos", nunca se inventa.</p>
+  <div id="dropzone" class="border-2 border-dashed rounded-2xl py-12 px-6 cursor-pointer transition-colors" style="border-color:var(--border);background:var(--card)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" class="w-10 h-10 mx-auto mb-4 dimmer"><path d="M12 15V4M12 4l-4 4M12 4l4 4"/><path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
+    <p class="text-[14.5px] font-semibold mb-1">Arrastrá los archivos acá, o tocá para elegirlos</p>
+    <p class="text-[12.5px] dimmer">Ventas y gastos de cada local · .xlsx o .xls · todo se procesa en tu navegador</p>
+  </div>
+</section>
+
+<!-- DASHBOARD -->
+<main id="dash" class="hidden max-w-[1320px] mx-auto px-5 pt-6 pb-24">
+  <div id="exportBar" class="card p-4 mb-5 flex flex-wrap items-center justify-between gap-3">
+    <div><p class="font-semibold text-[14px]">Informes para presentar</p><p class="text-[12px] dim mt-1">Exportá los datos analizados o imprimí el panel como PDF.</p></div>
+    <div class="flex flex-wrap gap-2"><button id="exportXlsxBtn" class="btn btn-primary">↓ Exportar Excel</button><button id="exportPdfBtn" class="btn">↓ Exportar PDF / Imprimir</button></div>
+  </div>
+
+  <div class="card p-4 mb-5">
+    <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+      <p class="text-[13.5px] font-semibold">Archivos cargados</p>
+      <div id="adminFileActions" class="flex flex-wrap items-center gap-2">
+        <span class="text-[12px] dimmer">Subí el Excel completo actualizado: reemplaza la versión anterior del mismo local y tipo, sin duplicar sus ventas.</span>
+        <button id="clearBtn" class="btn" style="border-color:var(--neg);color:var(--neg)">Limpiar datos cargados</button>
+      </div>
+    </div>
+    <div id="fileList" class="flex flex-wrap gap-3"></div>
+  </div>
+
+  <div class="flex flex-wrap items-end gap-3 mb-5">
+    <div><span class="lbl">Ver</span><div class="seg" id="scopeBar"></div></div>
+    <div class="seg" id="tabs">
+      <button data-tab="ventas" class="active">Ventas · año contra año</button>
+      <button data-tab="gastos">Gastos y utilidad</button>
+      <button data-tab="audit">Auditoría de datos</button>
+    </div>
+  </div>
+
+
+  <!-- ============ VENTAS ============ -->
+  <div id="tabVentas">
+    <div class="flex flex-wrap items-end gap-3 mb-4">
+      <div><label class="lbl">Año a analizar</label><select id="yearA" class="sel" style="min-width:100px"></select></div>
+      <div><label class="lbl">Contra el año</label><select id="yearB" class="sel" style="min-width:100px"></select></div>
+      <label class="flex items-center gap-2 text-[12.5px] dim pb-2 cursor-pointer"><input type="checkbox" id="sameChk" checked style="accent-color:#818cf8"> Comparar el mismo período</label>
+      <label class="flex items-center gap-2 text-[12.5px] dim pb-2 cursor-pointer"><input type="checkbox" id="allChk" style="accent-color:#818cf8"> Ver todos los años</label>
+      <label class="flex items-center gap-2 text-[12.5px] dim pb-2 cursor-pointer"><input type="checkbox" id="projChk" style="accent-color:#818cf8"> Estimar cierre del año</label>
+      <label id="partWrap" class="hidden flex items-center gap-2 text-[12.5px] dim pb-2 cursor-pointer"><input type="checkbox" id="partChk" style="accent-color:#818cf8"> Incluir meses donde falta algún local</label>
+    </div>
+    <div id="vEmpty" class="hidden card p-6 text-center dim text-[14px]"></div>
+    <div id="vBody">
+      <p id="vNote" class="text-[12.5px] dimmer mb-3 leading-relaxed"></p>
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-3.5 mb-3.5">
+        <div class="card p-4"><p class="lbl" id="kAl">Año A</p><p class="text-[24px] font-bold" id="kA">—</p></div>
+        <div class="card p-4"><p class="lbl" id="kBl">Año B</p><p class="text-[24px] font-bold" id="kB">—</p></div>
+        <div class="card p-4"><p class="lbl">Variación</p><p class="text-[24px] font-bold" id="kP">—</p></div>
+        <div class="card p-4"><p class="lbl">Diferencia</p><p class="text-[24px] font-bold" id="kD">—</p></div>
+      </div>
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-3.5 mb-5">
+        <div class="card p-4"><p class="lbl" id="kEfl">Efectivo</p><p class="text-[19px] font-bold" id="kEf">—</p><p class="text-[11.5px] dimmer mt-1" id="kEfs"></p></div>
+        <div class="card p-4"><p class="lbl" id="kTal">Tarjeta</p><p class="text-[19px] font-bold" id="kTa">—</p><p class="text-[11.5px] dimmer mt-1" id="kTas"></p></div>
+        <div class="card p-4"><p class="lbl">Promedio por día con venta</p><p class="text-[19px] font-bold" id="kAvg">—</p><p class="text-[11.5px] dimmer mt-1" id="kAvgs"></p></div>
+        <div class="card p-4" id="kProjCard"><p class="lbl" id="kProjl">Cierre estimado</p><p class="text-[19px] font-bold" id="kProj">—</p><p class="text-[11.5px] dimmer mt-1" id="kProjs">Activá "Estimar cierre del año"</p></div>
+      </div>
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-3.5 mb-5">
+        <div class="card p-5 lg:col-span-2"><p class="text-[13.5px] font-semibold mb-3">Ventas mes a mes</p><div class="chart-box"><canvas id="cLine"></canvas></div></div>
+        <div class="card p-5"><p class="text-[13.5px] font-semibold mb-3">Total por año <span class="dimmer font-normal text-[12px]">(* año incompleto)</span></p><div class="chart-box"><canvas id="cAnnual"></canvas></div></div>
+      </div>
+      <div class="card p-5 mb-5"><p class="text-[13.5px] font-semibold mb-3">Variación % por mes</p><div class="chart-box" style="height:240px"><canvas id="cVar"></canvas></div></div>
+      <div class="card overflow-hidden">
+        <div class="px-5 py-3.5" style="border-bottom:1px solid var(--border)"><p class="text-[13.5px] font-semibold">Detalle mensual</p></div>
+        <div class="overflow-x-auto"><table class="t"><thead id="vHead"></thead><tbody id="vBodyT"></tbody><tfoot id="vFoot"></tfoot></table></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ GASTOS ============ -->
+  <div id="tabGastos" class="hidden">
+    <div class="flex flex-wrap items-end gap-3 mb-4">
+      <div><label class="lbl">Año</label><select id="gYear" class="sel" style="min-width:100px"></select></div>
+    </div>
+    <div id="gEmpty" class="hidden card p-6 text-center dim text-[14px]"></div>
+    <div id="gBody">
+      <div id="gNote" class="text-[12.5px] mb-3 leading-relaxed"></div>
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-3.5 mb-5">
+        <div class="card p-4"><p class="lbl">Ventas del período</p><p class="text-[22px] font-bold" id="gk1">—</p><p class="text-[11.5px] dimmer mt-1" id="gk1s"></p></div>
+        <div class="card p-4"><p class="lbl">Gastos del período</p><p class="text-[22px] font-bold" id="gk2">—</p><p class="text-[11.5px] dimmer mt-1" id="gk2s"></p></div>
+        <div class="card p-4"><p class="lbl">Utilidad neta estimada</p><p class="text-[22px] font-bold" id="gk3">—</p><p class="text-[11.5px] dimmer mt-1" id="gk3s"></p></div>
+        <div class="card p-4"><p class="lbl">Resultado operativo</p><p class="text-[22px] font-bold" id="gk4">—</p><p class="text-[11.5px] dimmer mt-1" id="gk4s"></p></div>
+      </div>
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-3.5 mb-5">
+        <div class="card p-5 lg:col-span-2"><p class="text-[13.5px] font-semibold mb-1">Ventas, gastos y resultado por mes</p><p class="text-[11.5px] dimmer mb-3">La línea punteada es el promedio móvil de 3 meses: suaviza los meses de mucha o poca compra de mercadería.</p><div class="chart-box"><canvas id="gBar"></canvas></div></div>
+        <div class="card p-5"><p class="text-[13.5px] font-semibold mb-3">En qué se va el gasto</p><div class="chart-box"><canvas id="gDonut"></canvas></div></div>
+      </div>
+      <div class="card p-5 mb-5"><p class="text-[13.5px] font-semibold mb-3">Gastos por categoría y mes</p><div class="chart-box"><canvas id="gStack"></canvas></div></div>
+      <div class="card overflow-hidden mb-5">
+        <div class="px-5 py-3.5" style="border-bottom:1px solid var(--border)"><p class="text-[13.5px] font-semibold">Detalle mensual</p></div>
+        <div class="overflow-x-auto"><table class="t"><thead id="gHead"></thead><tbody id="gBodyT"></tbody><tfoot id="gFoot"></tfoot></table></div>
+      </div>
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-3.5">
+        <div class="card p-5">
+          <p class="text-[13.5px] font-semibold mb-1">Cómo se calcula la utilidad</p>
+          <div class="text-[12.5px] dim leading-relaxed space-y-2 mt-2">
+            <p><b>Utilidad neta estimada</b> = ventas − compras de mercadería − gastos operativos. Como no se hace recuento de stock, las compras se toman como costo de la mercadería: por eso conviene mirar el <b>acumulado de varios meses</b> y el promedio móvil, no un mes suelto.</p>
+            <p><b>Resultado operativo</b> = ventas − gastos operativos (sin compras): lo que deja el local después de sostenerse, antes de pagar mercadería.</p>
+            <p>Solo se calculan los meses que tienen <b>ventas y gastos cargados</b>. No incluye comisiones de tarjeta, impuestos ni retiros personales, salvo que los cargues como gasto.</p>
+          </div>
+        </div>
+        <div class="card p-5">
+          <p class="text-[13.5px] font-semibold mb-1">Clasificación de categorías</p>
+          <p class="text-[12px] dimmer mb-3">Definí cuáles son mercadería (costo), cuáles son gasto operativo y cuáles excluir del cálculo.</p>
+          <div id="clsBox" class="space-y-2"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ AUDITORÍA ============ -->
+  <div id="tabAudit" class="hidden">
+    <p class="text-[13px] dim mb-4 leading-relaxed">Esta pestaña compara lo que hay en tus Excel contra sí mismo: pies de planilla, hoja GRAFICO, fechas y totales por día. Los números del panel salen siempre de la suma de los <b>días reales</b>; acá ves dónde tus hojas no coinciden con eso.</p>
+    <div id="auditBox" class="space-y-3"></div>
+  </div>
+</main>
+
+<script>
+/* =================== Utilidades =================== */
+const $ = id => document.getElementById(id);
+const MONTHS = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+const MONTHS_FULL = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+const MABBR = {ENE:1,FEB:2,MAR:3,ABR:4,MAY:5,JUN:6,JUL:7,AGO:8,SEP:9,SET:9,OCT:10,OCB:10,NOV:11,DIC:12};
+const WEEKDAYS = new Set(['LUNES','MARTES','MIERCOLES','JUEVES','VIERNES','SABADO','DOMINGO']);
+const COLORS = ['#818cf8','#22d3ee','#34d399','#fbbf24','#fb7185','#a78bfa','#60a5fa','#f472b6','#f97316','#84cc16'];
+const MUTED = ['#64748b','#94a3b8','#7c8aa5','#a3aec2','#56627a','#8b97ad'];
+const S = { files:[], scope:'all', tab:'ventas', A:null, B:null, same:true, showAll:false, proj:false, incPartial:false, gYear:null, cls:{}, charts:{}, nextId:1, role:'jefes', pass:'', published:'' };
+
+
+const normalize = s => String(s ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase().trim();
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const titleCase = s => String(s).toLowerCase().replace(/(^|\s)\S/g, c => c.toUpperCase());
+const isNum = v => typeof v === 'number' && isFinite(v);
+const isDateObj = v => v instanceof Date && !isNaN(v);
+const fixDate = d => new Date(d.getTime() + 12*3600*1000);
+const nf0 = new Intl.NumberFormat('es-AR',{maximumFractionDigits:0});
+const nfc = new Intl.NumberFormat('es-AR',{notation:'compact',maximumFractionDigits:1});
+const money = n => (n==null||isNaN(n)) ? '—' : '$ '+nf0.format(n);
+const compact = n => '$ '+nfc.format(n);
+const signMoney = n => n==null ? '—' : (n>0?'+':n<0?'−':'')+'$ '+nf0.format(Math.abs(n));
+const pctTxt = p => (p==null||!isFinite(p)) ? '—' : (p>0?'+':p<0?'−':'')+Math.abs(p).toFixed(1).replace('.',',')+'%';
+const pct1 = p => (p==null||!isFinite(p)) ? '—' : p.toFixed(1).replace('.',',')+'%';
+const cls = x => x>0 ? 'pos' : x<0 ? 'neg' : '';
+const keyOf = s => normalize(s).replace(/[^A-Z0-9]/g,'');
+const sum = (arr,f) => arr.reduce((a,x)=>a+(f?f(x):x),0);
+
+/* =================== Autenticación y Roles =================== */
+const API = '/api/data';
+// JSON con claves ordenadas: sirve para comparar lo local contra lo publicado (la base reordena las claves).
+function stable(v){
+  if(v && typeof v.toJSON==='function') v=v.toJSON();
+  if(Array.isArray(v)) return '['+v.map(stable).join(',')+']';
+  if(v && typeof v==='object') return '{'+Object.keys(v).filter(k=>v[k]!==undefined).sort().map(k=>JSON.stringify(k)+':'+stable(v[k])).join(',')+'}';
+  return JSON.stringify(v===undefined?null:v);
+}
+const snapshot = () => ({ files:compactFiles(S.files), cls:S.cls });
+async function cloudGet(role, pass){
+  const r = await fetch(API,{headers:{'x-role':role,'x-pass':pass},cache:'no-store'});
+  let j=null; try{ j=await r.json(); }catch(e){}
+  if(!r.ok) throw new Error((j&&j.error)||('Error '+r.status));
+  return j;
+}
+async function cloudLogin(role){
+  const pass=$('passInput').value, err=$('authError'); err.classList.add('hidden');
+  if(role==='admin' && !pass){ err.textContent='Escribí la contraseña de administrador.'; err.classList.remove('hidden'); return; }
+  const btns=[...document.querySelectorAll('#authModal button')]; btns.forEach(b=>b.disabled=true);
+  try{
+    const j=await cloudGet(role,pass); const cloud=j.payload;
+    let files=cloud&&cloud.files?reviveFiles(cloud.files):[];
+    if(role==='admin'){
+      const local=loadSavedFiles(STORE_KEY);
+      if(local && local.length && (!cloud || stable(compactFiles(local))!==stable(cloud.files||[]))){
+        if(confirm('Hay datos guardados en este navegador que no coinciden con los publicados en la nube.\n\nAceptar = usar los de ESTE navegador (después los publicás).\nCancelar = usar los de la NUBE (los de este navegador quedan como copia anterior).')) files=local;
+        else saveFilesTo(BACKUP_KEY, local);
+      }
+    }
+    S.role=role; S.pass=pass; S.files=files; S.cls=(cloud&&cloud.cls)||{};
+    S.nextId=Math.max(0,...S.files.map(f=>+f.id||0))+1;
+    S.published=stable({files:(cloud&&cloud.files)||[], cls:(cloud&&cloud.cls)||{}});
+    $('passInput').value=''; $('authModal').classList.add('hidden');
+    applyRolePermissions(); renderAll();
+  }catch(e){
+    err.textContent = (e instanceof TypeError) ? 'No se pudo conectar. Abrí el panel desde el link de Vercel, no desde el archivo.' : e.message;
+    err.classList.remove('hidden');
+  }
+  btns.forEach(b=>b.disabled=false);
+}
+function logout(){
+  S.role='jefes'; S.pass=''; S.files=[]; S.cls={}; S.published='';
+  $('authModal').classList.remove('hidden'); applyRolePermissions(); renderAll();
+}
+function updatePublishBtn(){
+  const b=$('publishBtn'); if(!b) return;
+  b.classList.toggle('hidden', S.role!=='admin'); if(S.role!=='admin') return;
+  const dirty = stable(snapshot())!==S.published;
+  b.textContent = dirty ? '☁ Publicar en la nube ●' : '☁ Publicado ✓';
+  b.className = 'btn'+(dirty?' btn-primary':'');
+}
+async function publishCloud(){
+  if(S.role!=='admin') return;
+  if(!S.files.length){ showErr(['No hay datos para publicar.']); return; }
+  const b=$('publishBtn'); b.disabled=true; b.textContent='Publicando…'; $('errBox').classList.add('hidden');
+  try{
+    const snap=snapshot();
+    const r=await fetch(API,{method:'POST',headers:{'Content-Type':'application/json','x-role':'admin','x-pass':S.pass},body:JSON.stringify(snap)});
+    let j=null; try{ j=await r.json(); }catch(e){}
+    if(!r.ok) throw new Error((j&&j.error)||('Error '+r.status));
+    S.published=stable(snap); showInfo('Publicado: los jefes ya ven estos datos.');
+  }catch(e){ showErr(['No se pudo publicar: '+(e.message||e)+'. Tus datos siguen guardados en este navegador.']); }
+  b.disabled=false; updatePublishBtn();
+}
+$('publishBtn').addEventListener('click', publishCloud);
+$('passInput').addEventListener('keydown',e=>{ if(e.key==='Enter') cloudLogin('admin'); });
+function applyRolePermissions(){
+  const isAdmin = S.role === 'admin';
+  const badge = $('roleBadge');
+  if(badge) {
+    badge.textContent = isAdmin ? 'Admin' : 'Jefes (Solo lectura)';
+    badge.className = isAdmin ? 'badge b-g ml-2' : 'badge b-v ml-2';
+  }
+  
+  // Elementos de administración
+  $('navAdd').classList.toggle('hidden', !isAdmin);
+  const restoreB = $('restoreBtn');
+  if(restoreB) restoreB.classList.toggle('hidden', !isAdmin);
+  const clearB = $('clearBtn');
+  if(clearB) clearB.classList.toggle('hidden', !isAdmin);
+  
+  // Modificar textos de estado vacío si es jefe
+  const emptyDesc = $('emptyTextDesc');
+  if(emptyDesc){
+    emptyDesc.innerHTML = isAdmin 
+      ? 'Subí los Excel de <b>ventas</b> y de <b>gastos</b> de cada local. La app reconoce solos de qué local y de qué tipo es cada archivo, y muestra únicamente lo que está cargado: lo que falta aparece como "sin datos", nunca se inventa.'
+      : 'El administrador todavía no publicó datos. Cuando los publique, vas a poder ver los gráficos e informes desde acá.';
+  }
+  const dz = $('dropzone');
+  if(dz){
+    dz.style.display = isAdmin ? 'block' : 'none';
+  }
+}
+
+/* =================== Tema =================== */
+function applyTheme(dark){
+  document.documentElement.classList.toggle('dark', dark);
+  $('iconMoon').classList.toggle('hidden', !dark); $('iconSun').classList.toggle('hidden', dark);
+  try{ localStorage.setItem('pt_theme', dark?'dark':'light'); }catch(e){}
+}
+let isDark = true; try{ isDark = (localStorage.getItem('pt_theme')||'dark')==='dark'; }catch(e){}
+applyTheme(isDark);
+$('themeToggle').addEventListener('click', () => { isDark=!isDark; applyTheme(isDark); if(S.files.length) renderAll(); });
+function theme(){ const cs=getComputedStyle(document.documentElement); const g=k=>cs.getPropertyValue(k).trim(); return {grid:g('--grid'),tick:g('--dimmer'),text:g('--dim'),card:g('--card'),pos:g('--pos'),neg:g('--neg'),warn:g('--warn')}; }
+
+/* =================== Lectura de hojas =================== */
+function strDate(s){
+  const m = String(s).trim().match(/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})$/);
+  if(!m) return null;
+  let y=+m[3]; if(y<100) y+=2000;
+  const d = new Date(y,+m[2]-1,+m[1]);
+  return (!isNaN(d) && d.getMonth()===+m[2]-1) ? d : null;
+}
+function leadDay(v){ if(typeof v!=='string') return null; const m=v.match(/^\s*(\d{1,2})\D/); return (m && +m[1]>=1 && +m[1]<=31) ? +m[1] : null; }
+function monthFromName(name){
+  for(const t of normalize(name).split(/[^A-Z]+/)){ if(t.length>=4 && MABBR[t.slice(0,3)]) return MABBR[t.slice(0,3)]; }
+  return null;
+}
+function modalOf(arr){ const c={}; arr.forEach(x=>c[x]=(c[x]||0)+1); const k=Object.keys(c).sort((a,b)=>c[b]-c[a])[0]; return k===undefined?null:+k; }
+function sheetRows(wb, name, maxR, maxC){
+  return XLSX.utils.sheet_to_json(wb.Sheets[name], {header:1, defval:null, raw:true, range:{s:{r:0,c:0}, e:{r:maxR-1,c:maxC-1}}});
+}
+function cleanName(fn){
+  let n = fn.replace(/\.[^.]+$/,'').replace(/_+/g,' ');
+  n = n.replace(/copia de/gi,'').replace(/recuperado autom[aá]ticamente/gi,'').replace(/\b(ventas?|gastos?|local)\b/gi,'').replace(/\b20\d{2}\b/g,'').replace(/\(\d+\)/g,'').replace(/\s+/g,' ').trim();
+  return titleCase(n || fn.replace(/\.[^.]+$/,''));
+}
+
+/* ---------- VENTAS: una hoja = un mes ---------- */
+function parseSalesSheet(raw, sn, carry){
+  const isD = v => isDateObj(v) || (typeof v==='string' && strDate(v));
+  let fr=-1, dc=-1;
+  for(let i=0;i<Math.min(raw.length,60) && fr<0;i++){ const row=raw[i]||[]; for(let c=0;c<row.length;c++){ if(isD(row[c])){ fr=i; dc=c; break; } } }
+  if(fr<0) return null;
+  let nD=0; for(let i=fr;i<raw.length;i++) if(isD((raw[i]||[])[dc])) nD++;
+  if(nD<5) return null;
+  let hr=-1;
+  for(let h=fr-1; h>=Math.max(0,fr-8); h--){ if((raw[h]||[]).filter(v=>typeof v==='string' && v.trim()).length>=2){ hr=h; break; } }
+  if(hr<0) return null;
+  const hdr = raw[hr]; let limit = hdr.length;
+  for(let i=0;i<fr;i++) (raw[i]||[]).forEach((v,c)=>{ if(typeof v==='string' && /OBSERV/i.test(v) && c>dc) limit=Math.min(limit,c); });
+  const cols={ef:[],ta:[],tot:[],totdia:[]}; let dayCol=null;
+  for(let c=0;c<Math.min(limit,hdr.length);c++){
+    const v=hdr[c]; if(typeof v!=='string' || c===dc) continue;
+    const k = normalize(v).replace(/[:\s]+$/,'');
+    if(k==='EFECTIVO') cols.ef.push(c);
+    else if(k==='TARJETA') cols.ta.push(c);
+    else if(k.startsWith('TOTAL TURNO')) cols.tot.push(c);
+    else if(['TOTAL DIA','VENTA DIA','VTA. DEL DIA','VTA. DIA','VTA DIA'].includes(k)) cols.totdia.push(c);
+    else if(k==='DIA' && dayCol===null) dayCol=c;
+  }
+  const totCols = cols.tot.length ? cols.tot : cols.totdia;
+  if(!cols.ef.length && !cols.ta.length && !totCols.length) return null;
+  const g = (r,l) => l.reduce((a,c)=>a+(isNum(r[c])?r[c]:0),0);
+  const data=[]; let footer=null, seen=0;
+  for(let i=hr+1;i<raw.length;i++){
+    const r=raw[i]||[]; const d=r[dc];
+    const wd = dayCol!==null && WEEKDAYS.has(normalize(r[dayCol]));
+    if(isD(d) || leadDay(d)!==null || wd){ data.push({i,r,d}); seen++; }
+    else if(seen>=3){
+      if(footer===null && totCols.some(c=>isNum(r[c]))) footer = g(r,totCols);
+      if(i > data[data.length-1].i + 4) break;
+    }
+  }
+  if(!data.length) return null;
+  const nm = monthFromName(sn); const ny = (String(sn).match(/(20\d{2})/)||[])[1];
+  const dObjs = data.map(x=>isDateObj(x.d)?fixDate(x.d):(typeof x.d==='string'?strDate(x.d):null)).filter(Boolean);
+  const mYear = modalOf(dObjs.map(d=>d.getFullYear()));
+  const yr = nm ? (ny ? +ny : (mYear || carry)) : null;
+  const rows=[], flags=[], issues=[], dropped=[];
+  data.forEach(({i,r,d}) => {
+    const ef=g(r,cols.ef), ta=g(r,cols.ta);
+    const hasNumericTotal=totCols.some(c=>isNum(r[c]));
+    const tot=hasNumericTotal ? g(r,totCols) : ef+ta;
+    if(!ef && !ta && !tot) return;
+    let dd=null, day=null, typo=false;
+    if(isDateObj(d)) dd=fixDate(d); else if(typeof d==='string') dd=strDate(d);
+    if(dd) day=dd.getDate(); else { day=leadDay(d); typo=true; }
+    let y,m;
+    if(nm && yr){
+      y=yr; m=nm;
+      if(dd && (dd.getMonth()+1!==nm || dd.getFullYear()!==yr)) flags.push({sheet:sn,row:i+1,type:'Fecha de otro mes',raw:dd.toLocaleDateString('es-AR'),day});
+    } else if(dd){ y=dd.getFullYear(); m=dd.getMonth()+1; }
+    if(typo) flags.push({sheet:sn,row:i+1,type:day?'Fecha mal escrita':'Fila sin fecha',raw:String(d??'(vacía)'),day});
+    if(!y || !m){ dropped.push({sheet:sn,row:i+1,tot,ef,ta}); return; }
+    rows.push({y,m,day,ef,ta,tot,sheet:sn,row:i+1});
+    if(ef+ta && Math.abs(tot-(ef+ta))>=1) issues.push({sheet:sn,row:i+1,y,m,day,ef,ta,tot});
+  });
+  const a1 = raw[0] && raw[0][0];
+  const title = (typeof a1==='string' && a1.trim().length>1 && a1.trim().length<30 && !/TURNO|OBSERV|CAJA|DIA|PLANILLA/.test(normalize(a1))) ? a1.trim() : null;
+  return { name:sn, rows, flags, issues, dropped, footer, sum:sum(rows,x=>x.tot), year:(nm?yr:(mYear||carry)), month:nm, title };
+}
+
+function parseGrafico(wb){
+  const sn = wb.SheetNames.find(n => normalize(n)==='GRAFICO'); if(!sn) return null;
+  const g = sheetRows(wb, sn, 30, 20);
+  let hr=-1, years={};
+  for(let i=0;i<Math.min(6,g.length);i++){
+    const ys={};
+    (g[i]||[]).forEach((v,c)=>{
+      // En algunas planillas se repiten años en columnas de proyección.
+      // Conservamos la primera aparición de cada año para evitar pisar datos reales.
+      if(Number.isInteger(v) && v>=2015 && v<=2040 && !Object.values(ys).includes(v)) ys[c]=v;
+    });
+    if(Object.keys(ys).length>=2){ hr=i; years=ys; break; }
+  }
+  if(hr<0) return null;
+  const names=['ENERO','FEBRERO','MARZO','ABRIL','MAYO','JUNIO','JULIO','AGOSTO','SEPTIEMBRE','OCTUBRE','NOVIEMBRE','DICIEMBRE'];
+  const out={};
+  for(let i=hr+1;i<Math.min(g.length,hr+14);i++){
+    const label = normalize(g[i] && g[i][0]).replace('SETIEMBRE','SEPTIEMBRE'); const m = names.indexOf(label)+1; if(!m) continue;
+    Object.keys(years).forEach(c => { const v=g[i][c]; if(isNum(v)) out[years[c]+'-'+m]=v; });
+  }
+  return Object.keys(out).length ? out : null;
+}
+
+function parseSalesWorkbook(wb, fileName){
+  const sheets=[]; let carry=null; const titles={};
+  wb.SheetNames.forEach(sn => {
+    const p = parseSalesSheet(sheetRows(wb,sn,140,40), sn, carry);
+    if(!p) return;
+    carry = p.year; sheets.push(p);
+    if(p.title) titles[p.title]=(titles[p.title]||0)+1;
+  });
+  const grafico=parseGrafico(wb);
+  const byMonth={}; sheets.forEach(p => { const ks=new Set(p.rows.map(r=>r.y+'-'+r.m)); ks.forEach(k=>{ (byMonth[k]=byMonth[k]||[]).push(p); }); });
+  const dup=[]; const drop=new Set();
+  Object.keys(byMonth).forEach(k => { const L=byMonth[k]; if(L.length>1){ L.sort((a,b)=>Math.abs(b.sum)-Math.abs(a.sum)); dup.push({month:k, sheets:L.map(p=>p.name)}); L.slice(1).forEach(p=>drop.add(p.name+'|'+k)); } });
+  const rows=[]; sheets.forEach(p => p.rows.forEach(r => { if(!drop.has(p.name+'|'+r.y+'-'+r.m)) rows.push(r); }));
+
+  // GRAFICO funciona como respaldo mensual: nunca se suma encima de un mes
+  // que ya tiene ventas diarias reconocidas, para evitar duplicar importes.
+  const detailedMonths=new Set(rows.map(r=>r.y+'-'+r.m));
+  const graficoFallbackMonths=[];
+  if(grafico){
+    Object.entries(grafico).forEach(([key,value])=>{
+      const [y,m]=key.split('-').map(Number);
+      if(!detailedMonths.has(key) && Number.isFinite(y) && m>=1 && m<=12 && isNum(value)){
+        rows.push({y,m,day:null,ef:0,ta:0,tot:value,sheet:'GRAFICO',row:null,monthlyOnly:true});
+        graficoFallbackMonths.push(key);
+      }
+    });
+  }
+  if(!rows.length) throw new Error('No encontré ventas diarias ni totales mensuales válidos en la hoja GRAFICO.');
+  const top = Object.keys(titles).sort((a,b)=>titles[b]-titles[a])[0];
+  let detectedName=top ? titleCase(top) : cleanName(fileName);
+  const fn=normalize(fileName);
+  if(fn.includes('PIAZZA')) detectedName='Piazza';
+  else if(fn.includes('ARISTIDES')) detectedName='Aristides';
+  return { kind:'ventas', rows, sheets, flags:sheets.flatMap(p=>p.flags), issues:sheets.flatMap(p=>p.issues), dropped:sheets.flatMap(p=>p.dropped), dup, grafico, graficoFallbackMonths, monthlyOnly:rows.every(r=>r.monthlyOnly), localName:detectedName };
+}
+
+/* ---------- GASTOS: una hoja por mes, secciones por categoría ---------- */
+function parseExpenseWorkbook(wb, fileName){
+  const rows=[], audits=[], flags=[], monthCoverage=[]; let localName=null, sheetsRead=0; const trendByMonth={};
+  wb.SheetNames.forEach(sn => {
+    const k = normalize(sn).slice(0,3);
+    if(normalize(sn).includes('TENDENCIA')){
+      const trend = sheetRows(wb,sn,24,24);
+      const a1 = (trend[0]||[])[0];
+      if(typeof a1==='string'){ const m=a1.match(/^(.*?)\s+gastos?$/i); if(m && m[1].trim()) localName=titleCase(m[1].trim()); }
+      // Busca la columna explícita de total. No sumar todas las celdas de la fila:
+      // algunas planillas incluyen el total general además de las categorías, y eso lo duplicaría.
+      const trendHeader=trend[1]||[];
+      let totalCol=trendHeader.findIndex(v=>normalize(v).includes('TOTAL') && normalize(v).includes('GAST'));
+      if(totalCol<0) totalCol=trendHeader.findIndex(v=>normalize(v)==='TOTALES DE GASTOS');
+      for(let ti=2;ti<trend.length;ti++){
+        const tr=trend[ti]||[]; const mm=MABBR[normalize(tr[0]).slice(0,3)];
+        if(!mm) continue;
+        const categoryEnd=totalCol>0?totalCol:tr.length;
+        const fallback=sum(tr.slice(1,categoryEnd),v=>isNum(v)?v:0);
+        trendByMonth[mm]=totalCol>0 && isNum(tr[totalCol]) ? tr[totalCol] : fallback;
+      }
+      return;
+    }
+    const month = MABBR[k]; if(!month) return;
+    const raw = sheetRows(wb, sn, 400, 8);
+    let total=null, sec=null, amtCol=3; const secs={}; let any=false, movements=0;
+    raw.forEach((r,i) => {
+      const a=r[0];
+      if(typeof a==='string' && normalize(a)==='FECHA'){ r.forEach((v,j)=>{ if(['CANTIDAD','AMOUNT','IMPORTE','MONTO'].includes(normalize(v))) amtCol=j; }); return; }
+      if(normalize(r[2])==='TOTAL' && isNum(r[3]) && total===null){ total=r[3]; return; }
+      if(typeof a==='string' && normalize(a)==='SUBTOTAL'){ if(sec) secs[sec].subtotal = isNum(r[amtCol])?r[amtCol]:null; sec=null; return; }
+      if(typeof a==='string' && a.trim() && r.slice(1,4).every(v=>v===null) && !['X','S'].includes(normalize(a))){ sec=a.trim().replace(/\s+/g,' '); if(!secs[sec]) secs[sec]={sum:0,n:0,subtotal:null}; return; }
+      if(sec && isNum(r[amtCol])){
+        secs[sec].sum+=r[amtCol]; secs[sec].n++; any=true;
+        const dt = isDateObj(r[0]) ? fixDate(r[0]) : null;
+        if(dt && dt.getMonth()+1!==month) flags.push({sheet:sn,row:i+1,type:'Fecha de otro mes (gasto)',raw:dt.toLocaleDateString('es-AR')+' · '+(r[2]||'')});
+        rows.push({m:month, cat:sec, desc:r[2]||'', date:dt, amount:Math.abs(r[amtCol]), sheet:sn, row:i+1});
+        movements++;
+      }
+    });
+    if(any) sheetsRead++;
+    Object.keys(secs).forEach(s => { const d=secs[s]; if(d.subtotal!==null && Math.abs(d.sum-d.subtotal)>=1) audits.push({sheet:sn,what:'Categoría "'+s+'": los movimientos suman '+money(-d.sum)+' pero el subtotal de la hoja dice '+money(-d.subtotal)}); });
+    const ssum = sum(Object.values(secs),d=>d.sum);
+    monthCoverage.push({sheet:sn, month, movements, total:total===null?null:Math.abs(total), movementSum:Math.abs(ssum), trendTotal:Object.prototype.hasOwnProperty.call(trendByMonth,month)?Math.abs(trendByMonth[month]):null});
+    if(total!==null && Math.abs(Math.abs(ssum)-Math.abs(total))>=1) audits.push({sheet:sn,what:'Los movimientos suman '+money(Math.abs(ssum))+' pero el TOTAL de la hoja dice '+money(Math.abs(total))});
+    if(total!==null && Object.prototype.hasOwnProperty.call(trendByMonth,month) && Math.abs(Math.abs(total)-Math.abs(trendByMonth[month]))>=1) audits.push({sheet:sn,what:'El TOTAL de la hoja ('+money(Math.abs(total))+') no coincide con Tendencias anuales ('+money(Math.abs(trendByMonth[month]))+'). Revisar categorías o actualización del resumen.'});
+  });
+  if(!rows.length) throw new Error('no encontré movimientos de gastos cargados.');
+  let year = (fileName.match(/(20\d{2})/)||[])[1];
+  if(!year){ year = modalOf(rows.filter(r=>r.date).map(r=>r.date.getFullYear())); }
+  return { kind:'gastos', rows, audits, flags, monthCoverage, sheetsRead, year: year?+year:null, localName: localName || cleanName(fileName) };
+}
+
+function classifyWorkbook(wb){
+  if(wb.SheetNames.some(sn=>normalize(sn)==='GRAFICO')) return 'ventas';
+  if(wb.SheetNames.some(sn=>normalize(sn).includes('TENDENCIA'))) return 'gastos';
+  let expenseHits=0, salesHits=0;
+  wb.SheetNames.forEach(sn=>{
+    const raw=sheetRows(wb,sn,80,20);
+    const hasSubtotal=raw.some(r=>typeof r[0]==='string' && normalize(r[0])==='SUBTOTAL');
+    const hasExpenseHeader=raw.some(r=>r.some(v=>typeof v==='string' && normalize(v)==='FECHA') &&
+      r.some(v=>typeof v==='string' && ['CANTIDAD','AMOUNT','IMPORTE','MONTO'].includes(normalize(v))));
+    const hasSalesHeader=raw.some(r=>{
+      const vals=r.filter(v=>typeof v==='string').map(v=>normalize(v).replace(/[:\s]+$/,''));
+      return vals.includes('EFECTIVO') && vals.includes('TARJETA') && vals.some(v=>v.startsWith('TOTAL TURNO'));
+    });
+    if(hasSubtotal || hasExpenseHeader) expenseHits++;
+    if(hasSalesHeader) salesHits++;
+  });
+  return expenseHits>=3 && expenseHits>salesHits ? 'gastos' : 'ventas';
+}
+
+/* =================== Persistencia local =================== */
+const STORE_KEY='pt_panel_files_v2';
+const BACKUP_KEY='pt_panel_files_backup_v2';
+function compactFiles(files){
+  return files.map(f=>{
+    const x={...f};
+    if(f.kind==='ventas' && Array.isArray(f.sheets)){
+      x.sheets=f.sheets.map(p=>({name:p.name,footer:p.footer,sum:p.sum,flags:p.flags||[],issues:p.issues||[],dropped:p.dropped||[],year:p.year,month:p.month,title:p.title}));
+    }
+    return x;
+  });
+}
+function reviveFiles(files){
+  return (files||[]).map(f=>({
+    ...f,
+    loadedAt:f.loadedAt?new Date(f.loadedAt):new Date(),
+    rows:(f.rows||[]).map(r=>f.kind==='gastos'?({...r,date:r.date?new Date(r.date):null}):r)
+  }));
+}
+function saveFilesTo(key, files){
+  try{ localStorage.setItem(key,JSON.stringify(compactFiles(files))); return true; }
+  catch(e){ console.warn('No se pudo guardar el panel en este navegador',e); return false; }
+}
+function persistFiles(){
+  if(S.role!=='admin') return true; // los jefes no guardan datos en su navegador
+  const ok=saveFilesTo(STORE_KEY,S.files);
+  if(!ok){ const b=$('infoBox'); if(b){ b.textContent='No se pudo guardar la sesión en este navegador (posible límite de espacio). La operación no se considera guardada. Exportá o conservá tus Excel originales.'; b.classList.remove('hidden'); } }
+  return ok;
+}
+function backupFiles(files=S.files){
+  const ok=saveFilesTo(BACKUP_KEY,files);
+  updateRestoreButton();
+  if(!ok) showInfo('No se pudo crear una copia de seguridad en este navegador. Para proteger los datos, se canceló la operación. Exportá los datos o conservá los Excel originales e intentá nuevamente.');
+  return ok;
+}
+function loadSavedFiles(key){
+  try{ const raw=localStorage.getItem(key); return raw?reviveFiles(JSON.parse(raw)):null; }
+  catch(e){ console.warn('No se pudo recuperar el panel guardado',e); return null; }
+}
+function updateRestoreButton(){
+  const b=$('restoreBtn'); if(!b) return;
+  let has=false; try{ has=!!localStorage.getItem(BACKUP_KEY); }catch(e){}
+  b.classList.toggle('hidden',!has || S.role !== 'admin');
+}
+function showInfo(message){
+  const b=$('infoBox'); b.textContent=message; b.classList.remove('hidden');
+}
+$('restoreBtn').addEventListener('click',()=>{
+  if(S.role !== 'admin') return;
+  const restored=loadSavedFiles(BACKUP_KEY);
+  if(!restored){ showInfo('No hay una copia anterior guardada para recuperar.'); return; }
+  const currentCount=S.files.length, backupCount=restored.length;
+  if(!confirm(`RECUPERAR COPIA ANTERIOR\n\nLa copia contiene ${backupCount} archivo(s) procesado(s). La carga activa contiene ${currentCount}.\n\nLa carga activa será reemplazada por esa copia. Si no estás segura, elegí Cancelar. ¿Querés continuar?`)) return;
+  if(!backupFiles(S.files)) return;
+  const previous=S.files;
+  S.files=restored; S.nextId=Math.max(0,...S.files.map(f=>+f.id||0))+1;
+  if(!persistFiles()){ S.files=previous; renderAll(); return; }
+  renderAll(); showInfo('Copia anterior recuperada. La carga que estaba activa se guardó como copia de seguridad antes del cambio.');
+});
+$('clearBtn').addEventListener('click',()=>{
+  if(S.role !== 'admin') return;
+  if(!S.files.length) return;
+  if(!confirm('¿Limpiar los datos importados del panel? Se conservará una copia para poder restaurarla. No se borran ni modifican tus Excel originales.')) return;
+  if(!backupFiles(S.files)) return;
+  const previous=S.files;
+  S.files=[];
+  if(!persistFiles()){ S.files=previous; renderAll(); return; }
+  renderAll();
+  showInfo('Panel limpio. Los Excel originales no se tocaron y podés usar “Recuperar copia anterior” para recuperar la carga anterior.');
+});
+
+/* =================== Carga de archivos =================== */
+async function addFiles(list){
+  if(S.role !== 'admin') return;
+  const errs=[], notes=[]; $('errBox').classList.add('hidden'); $('infoBox').classList.add('hidden');
+  const previous=S.files.slice();
+  const previousNextId=S.nextId;
+  if(typeof XLSX==='undefined'){
+    showErr(['No se cargó la librería XLSX desde internet. Revisá tu conexión y recargá la página. No se modificaron los datos actuales.']);
+    return;
+  }
+  // Importación transaccional: si un archivo del lote falla, no se aplica ninguno.
+  // Esto evita dejar una mezcla de archivos viejos y nuevos al cargar los cuatro Excel.
+  const parsed=[];
+  for(const f of list){
+    if(!/\.(xlsx|xls)$/i.test(f.name)){ errs.push(f.name+': formato no soportado (usá .xlsx o .xls).'); continue; }
+    try{
+      const wb = XLSX.read(new Uint8Array(await f.arrayBuffer()), {type:'array', cellDates:true});
+      const kind = classifyWorkbook(wb);
+      const p = kind==='gastos' ? parseExpenseWorkbook(wb,f.name) : parseSalesWorkbook(wb,f.name);
+      const file = { id:previousNextId+parsed.length, fileName:f.name, loadedAt:new Date(), lk:keyOf(p.localName), ...p };
+      if(!file.rows || !file.rows.length) throw new Error('El archivo se abrió, pero no se detectaron filas de datos válidas.');
+      if(file.kind==='ventas' && file.graficoFallbackMonths && file.graficoFallbackMonths.length){
+        notes.push(file.localName+': se completaron '+file.graficoFallbackMonths.length+' mes(es) con GRAFICO porque no se reconocieron ventas diarias para esos períodos. Esos meses no tienen detalle por día.');
+      }
+      parsed.push(file);
+    }catch(e){ console.error(e); errs.push(f.name+': '+(e.message||e)); }
+  }
+  if(errs.length){
+    S.files=previous; S.nextId=previousNextId;
+    showErr(['No se aplicó ningún archivo del lote para evitar una carga incompleta.', ...errs]);
+    renderAll();
+    return;
+  }
+  if(!parsed.length){ showErr(['No se seleccionaron archivos válidos para importar.']); return; }
+  // Solo se crea la copia de seguridad cuando ya sabemos que todos los archivos se pudieron leer.
+  if(S.files.length && !backupFiles(S.files)) return;
+  for(const file of parsed){
+    const i = S.files.findIndex(x=>x.kind===file.kind && x.lk===file.lk);
+    if(i>=0){ notes.push('Se reemplazó el Excel de '+(file.kind==='ventas'?'ventas':'gastos')+' de '+file.localName+' por la versión nueva.'); S.files[i]=file; }
+    else S.files.push(file);
+  }
+  S.nextId=previousNextId+parsed.length;
+  if(!persistFiles()){
+    S.files=previous; S.nextId=previousNextId;
+    renderAll();
+    showInfo('La importación se revirtió porque el navegador no pudo guardar los datos. No cierres ni recargues esta pestaña hasta exportar o resolver el espacio de almacenamiento.');
+    return;
+  }
+  updateRestoreButton();
+  renderAll();
+  if(notes.length){ const b=$('infoBox'); b.innerHTML=notes.map(esc).join('<br>'); b.classList.remove('hidden'); }
+  else showInfo('Importación completada: '+parsed.length+' archivo(s) procesado(s). Los datos anteriores quedaron respaldados para poder restaurarlos.');
+}
+function showErr(l){ const b=$('errBox'); b.innerHTML=l.map(esc).join('<br>'); b.classList.remove('hidden'); }
+const dz=$('dropzone');
+dz.addEventListener('click',()=>{ if(S.role==='admin') $('fileInput').click(); });
+$('navAdd').addEventListener('click',()=>{ if(S.role==='admin') $('fileInput').click(); });
+$('fileInput').addEventListener('change',e=>{ if(S.role==='admin' && e.target.files.length) addFiles([...e.target.files]); e.target.value=''; });
+window.addEventListener('dragover',e=>{ if(S.role==='admin'){ e.preventDefault(); dz.classList.add('drop-active'); } });
+window.addEventListener('dragleave',e=>{ if(!e.relatedTarget) dz.classList.remove('drop-active'); });
+window.addEventListener('drop',e=>{ if(S.role==='admin'){ e.preventDefault(); dz.classList.remove('drop-active'); if(e.dataTransfer.files.length) addFiles([...e.dataTransfer.files]); } });
+
+/* =================== Modelo de datos =================== */
+function locals(){
+  const seen={}, out=[];
+  S.files.forEach(f => { if(!seen[f.lk]){ seen[f.lk]=true; out.push({key:f.lk, name:f.localName}); } });
+  return out;
+}
+const localName = k => (locals().find(l=>l.key===k)||{name:k}).name;
+const salesFile = k => S.files.find(f=>f.kind==='ventas' && f.lk===k);
+const gastosFile = k => S.files.find(f=>f.kind==='gastos' && f.lk===k);
+
+function localMonthly(k){
+  const f=salesFile(k), M={}; if(!f) return M;
+  f.rows.forEach(r => {
+    const y = M[r.y] || (M[r.y]=Array.from({length:12},()=>({tot:0,ef:0,ta:0,days:0,has:false})));
+    const c=y[r.m-1]; c.tot+=r.tot; c.ef+=r.ef; c.ta+=r.ta; if(r.tot && r.day) c.days++;
+  });
+  Object.values(M).forEach(y => y.forEach(c => { c.has = c.tot!==0 || c.ef!==0 || c.ta!==0; }));
+  return M;
+}
+function scopeLocals(){ return S.scope==='all' ? locals().filter(l=>salesFile(l.key)) : locals().filter(l=>l.key===S.scope && salesFile(l.key)); }
+function scopeMonthly(){
+  const per = scopeLocals().map(l => ({k:l.key, name:l.name, M:localMonthly(l.key)}));
+  if(per.length<=1) return { M: per[0]?per[0].M:{}, per, omitted:0 };
+  const years=new Set(); per.forEach(p=>Object.keys(p.M).forEach(y=>years.add(+y)));
+  const M={}; let omitted=0;
+  years.forEach(y => { M[y]=Array.from({length:12},(_,i) => {
+    const cells = per.map(p=>p.M[y]&&p.M[y][i]).filter(c=>c&&c.has);
+    const ok = S.incPartial ? cells.length>0 : cells.length===per.length;
+    if(cells.length>0 && !ok) omitted++;
+    return ok ? {tot:sum(cells,c=>c.tot),ef:sum(cells,c=>c.ef),ta:sum(cells,c=>c.ta),days:sum(cells,c=>c.days),has:true,part:cells.length<per.length}
+              : {tot:0,ef:0,ta:0,days:0,has:false};
+  }); });
+  return { M, per, omitted };
+}
+const yearsOf = M => Object.keys(M).map(Number).filter(y=>M[y].some(c=>c.has)).sort((a,b)=>a-b);
+const isPartialYear = (M,y) => !M[y] || M[y].filter(c=>c.has).length<12;
+const yearTotal = (M,y) => M[y] ? sum(M[y],c=>c.has?c.tot:0) : 0;
+function scopeRows(){ return scopeLocals().flatMap(l => salesFile(l.key).rows.map(r => ({...r, lk:l.key, ln:l.name}))); }
+
+function yoy(M,A,B,same){
+  const rows=[]; let ta=0,tb=0;
+  for(let m=0;m<12;m++){
+    const a=M[A]&&M[A][m], b=M[B]&&M[B][m]; const ha=!!(a&&a.has), hb=!!(b&&b.has);
+    const inc = same ? (ha&&hb) : (ha||hb);
+    rows.push({m, a:ha?a.tot:null, b:hb?b.tot:null, inc, da:ha?a.days:0, db:hb?b.days:0});
+    if(inc){ ta+=ha?a.tot:0; tb+=hb?b.tot:0; }
+  }
+  return { rows, ta, tb, diff:ta-tb, pct: tb ? (ta-tb)/Math.abs(tb)*100 : null };
+}
+
+function yoyCut(M, rows, A, B, same){
+  const res = yoy(M,A,B,same); res.cutMap={};
+  if(!same) return res;
+  let last=-1; res.rows.forEach((r,i)=>{ if(r.a!=null) last=i; });
+  if(last<0 || !res.rows[last].inc) return res;
+  const dim=new Date(A,last+1,0).getDate(), lastDay={};
+  rows.forEach(r=>{ if(r.y===A && r.m===last+1 && r.tot && r.day) lastDay[r.lk]=Math.max(lastDay[r.lk]||0,r.day); });
+  const cutBy=[]; Object.keys(lastDay).forEach(k=>{ if(lastDay[k] < dim-4) cutBy.push({lk:k,name:rows.find(r=>r.lk===k).ln,day:lastDay[k]}); });
+  if(!cutBy.length) return res;
+  cutBy.forEach(c=>res.cutMap[c.lk]=c.day);
+  let sb=0, db=0;
+  rows.forEach(r=>{ if(r.y===B && r.m===last+1 && r.tot){ const cd=res.cutMap[r.lk]; if(cd===undefined || (r.day && r.day<=cd)){ sb+=r.tot; db++; } } });
+  const row=res.rows[last]; res.tb += sb-row.b; row.b=sb; row.db=db; res.cut=Math.max(...cutBy.map(c=>c.day)); res.cutBy=cutBy;
+  res.diff=res.ta-res.tb; res.pct=res.tb?res.diff/Math.abs(res.tb)*100:null;
+  return res;
+}
+
+function aggregate(M, rows, res, Y, isB){
+  const inc=new Set(res.rows.filter(r=>r.inc).map(r=>r.m)); const cutRow=res.rows.find(r=>r.cut);
+  let ef=0,ta=0,tot=0,days=0;
+  rows.forEach(r=>{
+    const mi=r.m-1; if(r.y!==Y || !inc.has(mi) || !(M[Y][mi]&&M[Y][mi].has)) return;
+    if(isB && cutRow && mi===cutRow.m){ const cd=res.cutMap[r.lk]; if(cd!==undefined && !(r.day && r.day<=cd)) return; }
+    ef+=r.ef; ta+=r.ta; tot+=r.tot; if(r.tot) days++;
+  });
+  return {ef,ta,tot,days};
+}
+
+/* Gastos: nombres normalizados para agrupar sin alterar el dato original */
+const categoryKey = c => normalize(c).replace(/[^A-Z0-9]+/g,' ').trim().replace(/\s+/g,' ');
+const canonicalCategory = c => {
+  const k=categoryKey(c);
+  // Correcciones de alta confianza: variantes de escritura del mismo concepto.
+  if(k==='ALQUILER Y ESPENSAS' || k==='ALQUILER Y EXPENSAS') return 'Alquiler y Expensas';
+  if(k==='LIMPIEZA MANTENIMIENTO VARIOS' || k==='LIMPIEZA Y MANTENIMIENTO VARIOS') return 'Limpieza y mantenimiento varios';
+  if(k==='LUZ GAS MUNICIPALIDAD') return 'Luz, gas y municipalidad';
+  if(k==='SUELDOS') return 'Sueldos';
+  if(k==='COMPRAS') return 'Compras';
+  return String(c??'').trim().replace(/\s+/g,' ');
+};
+function categoryVariantAudit(){
+  const variants={};
+  S.files.filter(f=>f.kind==='gastos').forEach(f=>(f.rows||[]).forEach(r=>{
+    const canonical=canonicalCategory(r.cat); const key=categoryKey(canonical);
+    if(!variants[key]) variants[key]={canonical, originals:new Set(), count:0, files:new Set()};
+    variants[key].originals.add(String(r.cat??'').trim()); variants[key].count++; variants[key].files.add(f.fileName||f.localName||'Excel');
+  }));
+  return Object.values(variants).filter(v=>v.originals.size>1).sort((a,b)=>a.canonical.localeCompare(b.canonical,'es'));
+}
+const isMerc = c => /COMPRA|MERCADER|PEDIDO|PROVEEDOR/.test(normalize(canonicalCategory(c)));
+const clsOf = c => S.cls[normalize(canonicalCategory(c))] || S.cls[normalize(c)] || (isMerc(c) ? 'merc' : 'oper');
+function localGastos(k, year){
+  const f=gastosFile(k), G=Array.from({length:12},()=>({total:0,merc:0,oper:0,byCat:{},n:0,has:false}));
+  if(!f || f.year!==year) return G;
+  f.rows.forEach(r => {
+    const g=G[r.m-1]; g.n++; g.has=true;
+    const cat=canonicalCategory(r.cat); g.byCat[cat]=(g.byCat[cat]||0)+r.amount;
+    const c=clsOf(r.cat); if(c==='merc') g.merc+=r.amount; else if(c==='oper') g.oper+=r.amount;
+  });
+  G.forEach(g => { g.total = g.merc+g.oper; });
+  return G;
+}
+const gastoYears = () => [...new Set(S.files.filter(f=>f.kind==='gastos'&&f.year).map(f=>f.year))].sort((a,b)=>a-b);
+
+/* =================== Estado y controles =================== */
+function syncState(){
+  if(S.scope!=='all' && !locals().some(l=>l.key===S.scope)) S.scope='all';
+  const {M}=scopeMonthly(); const ys=yearsOf(M);
+  if(!ys.includes(S.A)) S.A = ys.length?ys[ys.length-1]:null;
+  if(!ys.includes(S.B)) S.B = ys.length?(ys[ys.indexOf(S.A)-1] ?? ys.find(y=>y!==S.A) ?? null):null;
+  const gy=gastoYears(); if(!gy.includes(S.gYear)) S.gYear = gy.length?gy[gy.length-1]:null;
+  return ys;
+}
+function fillSel(el,opts,val){ el.innerHTML=opts.map(o=>`<option value="${esc(o[0])}">${esc(o[1])}</option>`).join(''); if(val!=null) el.value=String(val); }
+function syncControls(ys){
+  const yo = ys.slice().reverse().map(y=>[y,String(y)]);
+  fillSel($('yearA'),yo,S.A); fillSel($('yearB'),yo,S.B);
+  fillSel($('gYear'),gastoYears().slice().reverse().map(y=>[y,String(y)]),S.gYear);
+  $('sameChk').checked=S.same; $('allChk').checked=S.showAll; $('projChk').checked=S.proj; $('partChk').checked=S.incPartial;
+  $('partWrap').classList.toggle('hidden', !(S.scope==='all' && locals().filter(l=>salesFile(l.key)).length>1));
+  $('scopeBar').innerHTML = [{key:'all',name:'Consolidado'}, ...locals()].map(l=>`<button data-scope="${esc(l.key)}" class="${S.scope===l.key?'active':''}">${esc(l.name)}</button>`).join('');
+  document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('active', b.dataset.tab===S.tab));
+  $('tabVentas').classList.toggle('hidden',S.tab!=='ventas'); $('tabGastos').classList.toggle('hidden',S.tab!=='gastos'); $('tabAudit').classList.toggle('hidden',S.tab!=='audit');
+}
+$('scopeBar').addEventListener('click',e=>{ const b=e.target.closest('button'); if(b){ S.scope=b.dataset.scope; renderAll(); } });
+$('tabs').addEventListener('click',e=>{ const b=e.target.closest('button'); if(b){ S.tab=b.dataset.tab; renderAll(); } });
+$('yearA').addEventListener('change',e=>{ S.A=+e.target.value; renderAll(); });
+$('yearB').addEventListener('change',e=>{ S.B=+e.target.value; renderAll(); });
+$('gYear').addEventListener('change',e=>{ S.gYear=+e.target.value; renderAll(); });
+$('sameChk').addEventListener('change',e=>{ S.same=e.target.checked; renderAll(); });
+$('allChk').addEventListener('change',e=>{ S.showAll=e.target.checked; renderAll(); });
+$('projChk').addEventListener('change',e=>{ S.proj=e.target.checked; renderAll(); });
+$('partChk').addEventListener('change',e=>{ S.incPartial=e.target.checked; renderAll(); });
+
+/* tarjetas de archivos */
+function fileRange(f){
+  if(f.kind==='ventas'){
+    const ks=f.rows.map(r=>r.y*100+r.m); const a=Math.min(...ks), b=Math.max(...ks); const lastRow=f.rows.filter(r=>r.y*100+r.m===b&&r.day).sort((x,y)=>y.day-x.day)[0];
+    const fm=k=>MONTHS[k%100-1]+' '+Math.floor(k/100);
+    return fm(a)+' → '+fm(b)+(lastRow?' (hasta el día '+lastRow.day+')':'');
+  }
+  const ms=[...new Set(f.rows.map(r=>r.m))].sort((a,b)=>a-b);
+  return (f.year||'¿año?')+' · meses cargados: '+ms.map(m=>MONTHS[m-1]).join(', ');
+}
+function renderFileList(){
+  $('fileList').innerHTML = S.files.map(f => {
+    const nflags = (f.flags||[]).length + (f.issues||[]).length + (f.audits||[]).length;
+    const canEdit = S.role === 'admin';
+    return `<div class="fcard" data-id="${f.id}">
+      <div class="flex items-center justify-between gap-2 mb-2">
+        <span class="badge ${f.kind==='ventas'?'b-v':'b-g'}">${f.kind==='ventas'?'VENTAS':'GASTOS'}</span>
+        ${canEdit ? `<button class="x dimmer" data-act="rm" title="Quitar archivo" style="font-size:18px;line-height:1">×</button>` : ''}
+      </div>
+      ${canEdit ? `<input class="sel" data-act="name" value="${esc(f.localName)}" style="width:100%;font-weight:600;margin-bottom:6px" aria-label="Local">` : `<p class="font-bold text-[14px] mb-1">${esc(f.localName)}</p>`}
+      <p class="text-[12px] dim leading-snug">${esc(fileRange(f))}</p>
+      <p class="text-[11.5px] dimmer mt-1">${f.rows.length.toLocaleString('es-AR')} ${f.kind==='ventas'?'días':'movimientos'} · ${f.kind==='ventas'?f.sheets.length:f.sheetsRead} hojas leídas${nflags?` · <span class="warn">${nflags} avisos</span>`:''}</p>
+      ${f.kind==='gastos' && canEdit?`<div class="mt-2 flex items-center gap-2 text-[12px] dim">Año de estos gastos <input class="sel" data-act="year" type="number" value="${f.year||''}" placeholder="2026" style="width:84px;min-width:0;padding:5px 8px"></div>`:''}
+      <p class="text-[11px] dimmer mt-2 truncate" title="${esc(f.fileName)}">${esc(f.fileName)}</p>
+    </div>`;
+  }).join('');
+}
+$('fileList').addEventListener('click',e=>{
+  if(S.role !== 'admin') return;
+  if(e.target.dataset.act!=='rm') return;
+  const id=+e.target.closest('.fcard').dataset.id; backupFiles(S.files); S.files=S.files.filter(f=>f.id!==id); renderAll();
+});
+$('fileList').addEventListener('change',e=>{
+  if(S.role !== 'admin') return;
+  const card=e.target.closest('.fcard'); if(!card) return; const f=S.files.find(x=>x.id===+card.dataset.id); if(!f) return;
+  if(e.target.dataset.act==='name'){ const n=e.target.value.trim(); if(n){ f.localName=n; f.lk=keyOf(n); const dup=S.files.find(x=>x!==f && x.kind===f.kind && x.lk===f.lk); if(dup){ S.files=S.files.filter(x=>x!==dup); const b=$('infoBox'); b.textContent='Ya había un Excel de '+(f.kind==='ventas'?'ventas':'gastos')+' de '+n+': se reemplazó por este.'; b.classList.remove('hidden'); } } }
+  if(e.target.dataset.act==='year'){ const y=+e.target.value; f.year = (y>=2000&&y<=2100)?y:f.year; }
+  renderAll();
+});
+
+/* =================== Gráficos =================== */
+function mk(key,id,cfg){ if(S.charts[key]) S.charts[key].destroy(); S.charts[key]=new Chart($(id).getContext('2d'),cfg); }
+function killAll(){ Object.keys(S.charts).forEach(k=>{ if(S.charts[k]){ S.charts[k].destroy(); S.charts[k]=null; } }); }
+function tip(horizontal){ return {callbacks:{label:ctx=>{ const v=typeof ctx.parsed==='number'?ctx.parsed:(horizontal?ctx.parsed.x:ctx.parsed.y); return (ctx.dataset.label?ctx.dataset.label+': ':(ctx.label?ctx.label+': ':''))+money(v); }}}; }
+function axes(T){ return { x:{grid:{display:false},ticks:{color:T.tick,font:{size:11}}}, y:{grid:{color:T.grid},ticks:{color:T.tick,font:{size:11},callback:v=>compact(v)}} }; }
+const legend = T => ({labels:{color:T.text,boxWidth:10,usePointStyle:true,font:{size:11}}});
+const yearColor = y => y===S.A?'#818cf8':y===S.B?'#22d3ee':MUTED[Math.abs(y)%MUTED.length];
+
+/* =================== Vista: Ventas =================== */
+function renderVentas(){
+  const T=theme(); const {M,per,omitted}=scopeMonthly(); const rows=scopeRows();
+  const bad = S.A==null || S.B==null;
+  $('vEmpty').classList.toggle('hidden',!bad); $('vBody').classList.toggle('hidden',bad);
+  if(bad){ killAll(); $('vEmpty').textContent = per.length ? 'Necesitás al menos dos años con ventas para comparar.' : (S.role==='admin'?'Cargá el Excel de ventas de un local para empezar.':'El administrador todavía no publicó datos de ventas.'); return; }
+
+  const res = yoyCut(M,rows,S.A,S.B,S.same);
+  const n = res.rows.filter(r=>r.inc).length; const cut=res.rows.find(r=>r.cut);
+  const notes=[];
+  notes.push(S.same ? (n?`Comparando ${n} ${n===1?'mes':'meses'} con datos en ambos años.`:`No hay meses con datos en ${S.A} y ${S.B} a la vez; destildá "Comparar el mismo período".`) : 'Totales completos de cada año: un año en curso se verá más bajo que uno completo.');
+  if(cut){ const who=cut.cutBy.length>1 ? cut.cutBy.map(c=>c.name+' hasta el día '+c.day).join(' y ') : 'solo hasta el día '+cut.cut; notes.push(`${MONTHS_FULL[cut.m]} ${S.A} tiene datos ${cut.cutBy.length>1?'(':''}${who}${cut.cutBy.length>1?')':''}: cada local se compara contra los mismos días de ${S.B}.`); }
+  if(S.scope==='all' && per.length>1 && !S.incPartial) notes.push(`Consolidado: se suman solo los meses en que todos los locales tienen datos${omitted?` (se omiten ${omitted} meses en los que algún local no tiene datos; podés incluirlos con "Incluir meses donde falta algún local")`:''}.`);
+  $('vNote').textContent = notes.join(' ');
+  $('kAl').textContent='Ventas '+S.A; $('kBl').textContent='Ventas '+S.B;
+  $('kA').textContent=money(res.ta); $('kB').textContent=money(res.tb);
+  $('kP').textContent=pctTxt(res.pct); $('kP').className='text-[24px] font-bold '+cls(res.pct);
+  $('kD').textContent=signMoney(res.diff); $('kD').className='text-[24px] font-bold '+cls(res.diff);
+
+  const a=aggregate(M,rows,res,S.A,false), b=aggregate(M,rows,res,S.B,true);
+  $('kEfl').textContent='Efectivo '+S.A; $('kTal').textContent='Tarjeta '+S.A;
+  $('kEf').textContent=money(a.ef); $('kTa').textContent=money(a.ta);
+  const efTot=a.ef+a.ta; $('kEfs').textContent = efTot? pct1(a.ef/efTot*100)+' del cobro · '+S.B+': '+(b.ef+b.ta?pct1(b.ef/(b.ef+b.ta)*100):'—') : '';
+  $('kTas').textContent = efTot? pct1(a.ta/efTot*100)+' del cobro · '+S.B+': '+(b.ef+b.ta?pct1(b.ta/(b.ef+b.ta)*100):'—') : '';
+  const avgA=a.days?a.tot/a.days:null, avgB=b.days?b.tot/b.days:null;
+  $('kAvg').textContent=money(avgA); $('kAvgs').textContent = (avgB?S.B+': '+money(avgB)+' ('+pctTxt((avgA-avgB)/avgB*100)+')':'')+(per.length>1?' · por local-día':'');
+
+  const ys=yearsOf(M); const proj=projection(M,rows);
+  $('kProjl').textContent='Cierre estimado '+S.A;
+  if(S.proj && proj){ $('kProj').textContent=money(proj.total); $('kProjs').textContent=`ESTIMACIÓN: real hasta ${MONTHS[proj.from-1]} + ritmo ${pctTxt(proj.ratio*100-100)} vs ${S.B}`; }
+  else { $('kProj').textContent='—'; $('kProjs').textContent = S.proj ? 'Sin base suficiente (hacen falta 3+ meses comparables).' : 'Activá "Estimar cierre del año"'; }
+
+  const list = S.showAll ? ys : [S.B,S.A];
+  const sets = list.map(y => { const main=y===S.A||y===S.B; return { label:String(y)+(isPartialYear(M,y)?' *':''), data:M[y]?M[y].map(c=>c.has?c.tot:null):MONTHS.map(()=>null), borderColor:yearColor(y), backgroundColor:yearColor(y), borderWidth:main?3:1.4, pointRadius:main?3:0, tension:.3, spanGaps:false, order:y===S.A?0:y===S.B?1:2 }; });
+  if(S.proj && proj){ sets.push({ label:'Estimación '+S.A+' (no es dato real)', data:proj.series, borderColor:'#fbbf24', backgroundColor:'#fbbf24', borderDash:[6,5], borderWidth:2.5, pointRadius:3, tension:.3, spanGaps:false, order:0 }); }
+  mk('line','cLine',{type:'line',data:{labels:MONTHS,datasets:sets},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:legend(T),tooltip:tip(false)},scales:axes(T)}});
+  mk('annual','cAnnual',{type:'bar',data:{labels:ys.map(y=>y+(isPartialYear(M,y)?' *':'')),datasets:[{data:ys.map(y=>yearTotal(M,y)),borderRadius:6,maxBarThickness:34,backgroundColor:ys.map(y=>y===S.A?'#818cf8':y===S.B?'#22d3ee':MUTED[0]+'99')}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:tip(false)},scales:axes(T)}});
+  const vr=res.rows.map(r=>(r.a!=null&&r.b!=null&&r.b!==0)?(r.a-r.b)/Math.abs(r.b)*100:null);
+  mk('var','cVar',{type:'bar',data:{labels:MONTHS,datasets:[{data:vr,borderRadius:5,maxBarThickness:36,backgroundColor:vr.map(v=>v==null?'transparent':v>=0?T.pos:T.neg)}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>pctTxt(c.parsed.y)}}},scales:{x:{grid:{display:false},ticks:{color:T.tick,font:{size:11}}},y:{grid:{color:T.grid},ticks:{color:T.tick,font:{size:11},callback:v=>v+'%'}}}}});
+
+  $('vHead').innerHTML=`<tr><th>Mes</th><th class="r">${S.A}</th><th class="r">${S.B}</th><th class="r">Diferencia</th><th class="r">Var. %</th><th class="r">Días c/venta ${S.A}</th><th class="r">Días c/venta ${S.B}</th></tr>`;
+  $('vBodyT').innerHTML=res.rows.filter(r=>r.a!=null||r.b!=null).map(r=>{
+    const d=(r.a!=null&&r.b!=null)?r.a-r.b:null; const p=(r.a!=null&&r.b!=null&&r.b!==0)?d/Math.abs(r.b)*100:null;
+    return `<tr style="${r.inc?'':'opacity:.45'}"><td>${MONTHS[r.m]}${r.cut?` <span class="dimmer" style="font-size:11.5px">(${r.cutBy.length>1?r.cutBy.map(c=>c.name+' '+c.day).join(' / '):'hasta el día '+r.cut})</span>`:''}</td><td class="r">${money(r.a)}</td><td class="r">${money(r.b)}</td><td class="r ${cls(d)}">${signMoney(d)}</td><td class="r ${cls(p)}">${pctTxt(p)}</td><td class="r dimmer">${r.a!=null?r.da:'—'}</td><td class="r dimmer">${r.b!=null?r.db:'—'}</td></tr>`;
+  }).join('');
+  $('vFoot').innerHTML=`<tr><td>Total comparado</td><td class="r">${money(res.ta)}</td><td class="r">${money(res.tb)}</td><td class="r ${cls(res.diff)}">${signMoney(res.diff)}</td><td class="r ${cls(res.pct)}">${pctTxt(res.pct)}</td><td class="r">${a.days}</td><td class="r">${b.days}</td></tr>`;
+}
+
+function projection(M,rows){
+  const base=yoyCut(M,rows,S.A,S.B,true);
+  const comparable=base.rows.filter(r=>r.inc).length;
+  if(comparable<3 || !base.tb || !M[S.A] || !M[S.B]) return null;
+  let last=-1; M[S.A].forEach((c,i)=>{ if(c.has) last=i; });
+  const cut=base.rows.find(r=>r.cut); const from=(cut?last:last+1);
+  const ratio=base.ta/base.tb; const series=MONTHS.map(()=>null); let total=0, any=false;
+  for(let m=0;m<12;m++){
+    if(m<from){ if(M[S.A][m].has) total+=M[S.A][m].tot; }
+    else if(M[S.B][m] && M[S.B][m].has){ const e=M[S.B][m].tot*ratio; series[m]=e; total+=e; any=true; }
+  }
+  if(!any) return null;
+  return { total, ratio, series, from:from+1 };
+}
+
+/* =================== Vista: Gastos y utilidad =================== */
+function renderGastos(){
+  const T=theme(); const year=S.gYear;
+  const lks = (S.scope==='all' ? locals() : locals().filter(l=>l.key===S.scope));
+  const withG = lks.filter(l=>gastosFile(l.key));
+  const none = !year || !withG.length;
+  $('gEmpty').classList.toggle('hidden',!none);$('gBody').classList.toggle('hidden',none);
+  if(none){ killAll(); $('gEmpty').textContent = !gastoYears().length ? (S.role==='admin'?'Cargá el Excel de gastos de un local para ver la utilidad.':'El administrador aún no cargó gastos en este año.') : 'Este local no tiene gastos cargados en el año elegido.'; return; }
+
+  const per = lks.map(l => ({k:l.key,name:l.name,G:localGastos(l.key,year),V:(localMonthly(l.key)[year]||null)}));
+  const hasG=(p,i)=>p.G[i].has, hasV=(p,i)=>!!(p.V&&p.V[i].has);
+  const okMonths=[]; for(let i=0;i<12;i++){ if(per.every(p=>hasG(p,i)&&hasV(p,i))) okMonths.push(i); }
+  const cell = i => ({ ventas:sum(per,p=>p.V?p.V[i].tot:0), merc:sum(per,p=>p.G[i].merc), oper:sum(per,p=>p.G[i].oper), total:sum(per,p=>p.G[i].total) });
+
+  const warns=[];
+  per.forEach(p => {
+    const sinG=[],sinV=[]; for(let i=0;i<12;i++){ if(hasV(p,i)&&!hasG(p,i)) sinG.push(MONTHS[i]); if(hasG(p,i)&&!hasV(p,i)) sinV.push(MONTHS[i]); }
+    if(!gastosFile(p.k)) warns.push(`<b>${esc(p.name)}</b>: no tiene Excel de gastos cargado.`);
+    else { if(sinG.length) warns.push(`<b>${esc(p.name)}</b>: tiene ventas pero <b>sin gastos cargados</b> en ${sinG.join(', ')} ${year}. Esos meses no entran en la utilidad.`); if(sinV.length) warns.push(`<b>${esc(p.name)}</b>: tiene gastos pero sin ventas en ${sinV.join(', ')}.`); }
+  });
+  $('gNote').innerHTML = `<p class="dim mb-1"><b>Importante:</b> el saldo ventas menos gastos es una estimación de gestión, no flujo de caja real ni utilidad contable. Las compras de mercadería no equivalen necesariamente al costo de lo vendido; para calcular la utilidad real se necesita inventario inicial/final y costo de mercadería vendida.</p>`+(per.length>1?`<p class="dim mb-1">Consolidado: el resultado se calcula solo con los meses donde <b>todos</b> los locales tienen ventas y gastos cargados.</p>`:'')+warns.map(w=>`<p class="warn">⚠ ${w}</p>`).join('');
+
+  const tot = okMonths.reduce((a,i)=>{ const c=cell(i); a.v+=c.ventas; a.m+=c.merc; a.o+=c.oper; return a; },{v:0,m:0,o:0});
+  const g=tot.m+tot.o, util=tot.v-g, oper=tot.v-tot.o;
+  const rng = okMonths.length ? okMonths.map(i=>MONTHS[i]).join(', ') : null;
+  $('gk1').textContent = okMonths.length?money(tot.v):'—'; $('gk1s').textContent = rng?('Meses: '+rng):'Sin meses con ventas y gastos a la vez';
+  $('gk2').textContent = okMonths.length?money(g):'—'; $('gk2s').textContent = okMonths.length?`Mercadería ${money(tot.m)} · Operativo ${money(tot.o)}`:'';
+  $('gk3').textContent = okMonths.length?money(util):'—'; $('gk3').className='text-[22px] font-bold '+(okMonths.length?cls(util):'');
+  $('gk3s').textContent = okMonths.length&&tot.v?pct1(util/tot.v*100)+' de las ventas · estimación, no utilidad contable (falta costo de mercadería vendida y stock)':'';
+  $('gk4').textContent = okMonths.length?money(oper):'—'; $('gk4').className='text-[22px] font-bold '+(okMonths.length?cls(oper):'');
+  $('gk4s').textContent = okMonths.length&&tot.v?pct1(oper/tot.v*100)+' de las ventas · compras = '+pct1(tot.m/tot.v*100)+' de las ventas':'';
+
+  const labels=okMonths.map(i=>MONTHS[i]); const res=okMonths.map(i=>{ const c=cell(i); return c.ventas-c.total; });
+  const ma=res.map((_,j)=>j<2?null:(res[j]+res[j-1]+res[j-2])/3);
+  mk('gbar','gBar',{type:'bar',data:{labels,datasets:[
+    {type:'bar',label:'Ventas',data:okMonths.map(i=>cell(i).ventas),backgroundColor:'#818cf8',borderRadius:5,maxBarThickness:26,order:2},
+    {type:'bar',label:'Gastos',data:okMonths.map(i=>cell(i).total),backgroundColor:'#fb7185',borderRadius:5,maxBarThickness:26,order:2},
+    {type:'line',label:'Saldo ventas − gastos (estimado)',data:res,borderColor:'#34d399',backgroundColor:'#34d399',borderWidth:2.5,pointRadius:3,tension:.25,order:0},
+    {type:'line',label:'Prom. móvil 3 meses',data:ma,borderColor:'#fbbf24',backgroundColor:'#fbbf24',borderWidth:2,borderDash:[6,5],pointRadius:0,tension:.25,order:1}]},
+    options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:legend(T),tooltip:tip(false)},scales:axes(T)}});
+
+  const catTot={}; per.forEach(p=>p.G.forEach(g=>Object.keys(g.byCat).forEach(c=>{ if(clsOf(c)!=='excl') catTot[c]=(catTot[c]||0)+g.byCat[c]; })));
+  const cats=Object.keys(catTot).sort((a,b)=>catTot[b]-catTot[a]);
+  mk('gdonut','gDonut',{type:'doughnut',data:{labels:cats,datasets:[{data:cats.map(c=>Math.max(0,catTot[c])),backgroundColor:COLORS,borderColor:T.card,borderWidth:2}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{color:T.text,boxWidth:10,usePointStyle:true,font:{size:11},padding:12}},tooltip:tip(false)}}});
+  const gm=[]; for(let i=0;i<12;i++){ if(per.some(p=>hasG(p,i))) gm.push(i); }
+  mk('gstack','gStack',{type:'bar',data:{labels:gm.map(i=>MONTHS[i]),datasets:cats.map((c,j)=>({label:c,data:gm.map(i=>sum(per,p=>p.G[i].byCat[c]||0)),backgroundColor:COLORS[j%COLORS.length],borderRadius:3,maxBarThickness:42}))},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:legend(T),tooltip:tip(false)},scales:{x:{stacked:true,grid:{display:false},ticks:{color:T.tick,font:{size:11}}},y:{stacked:true,grid:{color:T.grid},ticks:{color:T.tick,font:{size:11},callback:v=>compact(v)}}}}});
+
+  $('gHead').innerHTML='<tr><th>Mes</th><th class="r">Ventas</th><th class="r">Compras</th><th class="r">Gastos operativos</th><th class="r">Total gastos</th><th class="r">Saldo ventas − gastos (estimado)</th><th class="r">Resultado operativo</th><th class="r">Compras / ventas</th><th>Estado</th></tr>';
+  $('gBodyT').innerHTML=Array.from({length:12},(_,i)=>i).filter(i=>per.some(p=>hasV(p,i)||hasG(p,i))).map(i=>{
+    const c=cell(i); const ok=okMonths.includes(i);
+    const miss=[]; per.forEach(p=>{ if(!hasV(p,i)) miss.push(p.name+': sin ventas'); if(!hasG(p,i)) miss.push(p.name+': sin gastos'); });
+    if(!ok) return `<tr style="opacity:.6"><td>${MONTHS[i]}</td><td class="r">${per.every(p=>hasV(p,i))?money(c.ventas):'—'}</td><td class="r dimmer">—</td><td class="r dimmer">—</td><td class="r dimmer">—</td><td class="r dimmer">—</td><td class="r dimmer">—</td><td class="r dimmer">—</td><td class="warn" style="font-size:12px">${esc(miss.join(' · '))}</td></tr>`;
+    const r1=c.ventas-c.total, r2=c.ventas-c.oper;
+    return `<tr><td>${MONTHS[i]}</td><td class="r">${money(c.ventas)}</td><td class="r">${money(c.merc)}</td><td class="r">${money(c.oper)}</td><td class="r">${money(c.total)}</td><td class="r ${cls(r1)}">${signMoney(r1)}</td><td class="r ${cls(r2)}">${signMoney(r2)}</td><td class="r">${c.ventas?pct1(c.merc/c.ventas*100):'—'}</td><td class="pos" style="font-size:12px">completo</td></tr>`;
+  }).join('');
+  $('gFoot').innerHTML = okMonths.length?`<tr><td>Total (${okMonths.length} ${okMonths.length===1?'mes':'meses'})</td><td class="r">${money(tot.v)}</td><td class="r">${money(tot.m)}</td><td class="r">${money(tot.o)}</td><td class="r">${money(g)}</td><td class="r ${cls(util)}">${signMoney(util)}</td><td class="r ${cls(oper)}">${signMoney(oper)}</td><td class="r">${tot.v?pct1(tot.m/tot.v*100):'—'}</td><td></td></tr>`:'';
+
+  const allCats=[...new Set(S.files.filter(f=>f.kind==='gastos').flatMap(f=>f.rows.map(r=>canonicalCategory(r.cat))))].sort((a,b)=>a.localeCompare(b,'es'));
+  const canEdit = S.role === 'admin';
+  $('clsBox').innerHTML=allCats.map(c=>`<div class="flex items-center justify-between gap-3"><span class="text-[13px]">${esc(c)}</span><select class="sel" data-cat="${esc(normalize(c))}" style="min-width:150px" ${canEdit?'':'disabled'}><option value="merc" ${clsOf(c)==='merc'?'selected':''}>Mercadería (costo)</option><option value="oper" ${clsOf(c)==='oper'?'selected':''}>Gasto operativo</option><option value="excl" ${clsOf(c)==='excl'?'selected':''}>Excluir del cálculo</option></select></div>`).join('');
+}
+$('clsBox').addEventListener('change',e=>{ if(S.role==='admin' && e.target.dataset.cat){ S.cls[e.target.dataset.cat]=e.target.value; renderAll(); } });
+
+/* =================== Vista: Auditoría =================== */
+function renderAudit(){
+  const secs=[]; const add=(title,count,html,sev)=>secs.push({title,count,html,sev});
+  const tbl=(head,rows)=>`<div class="overflow-x-auto"><table class="t"><thead><tr>${head.map(h=>`<th>${h}</th>`).join('')}</tr></thead><tbody>${rows.join('')}</tbody></table></div>`;
+  const ventas=S.files.filter(f=>f.kind==='ventas');
+
+  const cov=[];
+  locals().forEach(l => {
+    const sf=salesFile(l.key), gf=gastosFile(l.key);
+    cov.push(`<tr><td><b>${esc(l.name)}</b></td><td>${sf?esc(fileRange(sf)):'<span class="warn">sin Excel de ventas</span>'}</td><td>${gf?esc(fileRange(gf)):'<span class="warn">sin Excel de gastos</span>'}</td></tr>`);
+    if(sf && gf && gf.year){ const V=localMonthly(l.key)[gf.year], G=localGastos(l.key,gf.year); const miss=[]; for(let i=0;i<12;i++){ if(V&&V[i].has&&!G[i].has) miss.push(MONTHS[i]); } if(miss.length) cov.push(`<tr><td></td><td colspan="2" class="warn">⚠ Ventas cargadas pero sin gastos en ${miss.join(', ')} ${gf.year}: esos meses quedan sin utilidad.</td></tr>`); }
+  });
+  add('Cobertura de datos por local',0,tbl(['Local','Ventas','Gastos'],cov),'info');
+
+  const catVariants=categoryVariantAudit();
+  add('Categorías normalizadas y variantes detectadas',catVariants.length,catVariants.length?tbl(['Categoría consolidada','Nombres originales detectados','Movimientos','Archivos'],catVariants.map(v=>`<tr><td><b>${esc(v.canonical)}</b></td><td>${[...v.originals].map(esc).join(' · ')}</td><td class="r">${v.count}</td><td>${[...v.files].map(esc).join(' · ')}</td></tr>`)):'<p class="p-4 text-[13px] pos">No se detectaron categorías con variantes de nombre entre los gastos cargados.</p>',catVariants.length?'info':'ok');
+
+  ventas.forEach(f => {
+    if(!f.grafico) return; const M=localMonthly(f.lk); const diffs=[];
+    Object.keys(f.grafico).forEach(k => { const [y,m]=k.split('-').map(Number); const real=(M[y]&&M[y][m-1].tot)||0; const gv=f.grafico[k]; if(Math.abs(real-gv)>=1){ if(!gv && real) diffs.push({y,m,gv,real,note:'La hoja GRAFICO no tiene este mes (o está en cero) pero hay ventas diarias cargadas.'}); else if(gv||real) diffs.push({y,m,gv,real,note:''}); } });
+    diffs.sort((a,b)=>a.y*100+a.m-(b.y*100+b.m));
+    add('Hoja GRAFICO vs suma de los días — '+f.localName,diffs.length,diffs.length?tbl(['Mes','GRAFICO dice','Suma de los días','Diferencia',''],diffs.map(d=>`<tr><td>${MONTHS[d.m-1]} ${d.y}</td><td class="r">${money(d.gv)}</td><td class="r">${money(d.real)}</td><td class="r ${cls(d.real-d.gv)}">${signMoney(d.real-d.gv)}</td><td class="dimmer" style="font-size:12px">${esc(d.note)}</td></tr>`)):'<p class="p-4 text-[13px] pos">Todos los meses de la hoja GRAFICO coinciden con la suma de los días.</p>',diffs.length?'warn':'ok');
+  });
+
+  ventas.forEach(f => {
+    const rec=f.sheets.filter(p=>p.footer!==null && Math.abs(p.footer-p.sum)>=1);
+    add('Pie de planilla vs suma de los días — '+f.localName,rec.length,rec.length?tbl(['Hoja','Suma de los días','Pie de la planilla','Diferencia'],rec.map(p=>`<tr><td>${esc(p.name)}</td><td class="r">${money(p.sum)}</td><td class="r">${money(p.footer)}</td><td class="r ${cls(p.sum-p.footer)}">${signMoney(p.sum-p.footer)}</td></tr>`)):'<p class="p-4 text-[13px] pos">Todos los pies de planilla coinciden con la suma de los días.</p>',rec.length?'warn':'ok');
+  });
+
+  ventas.forEach(f => {
+    const fl=f.flags||[];
+    add('Fechas con problemas — '+f.localName,fl.length,fl.length?`<p class="px-4 pt-3 text-[12.5px] dim">Estas filas se incluyeron igual y se contaron en el mes de su hoja. Revisalas para corregir la fecha en el Excel.</p>`+tbl(['Hoja','Fila','Problema','Lo que dice la celda'],fl.slice(0,300).map(x=>`<tr><td>${esc(x.sheet)}</td><td>${x.row}</td><td>${esc(x.type)}</td><td>${esc(x.raw)}</td></tr>`)):'<p class="p-4 text-[13px] pos">No hay fechas con problemas.</p>',fl.length?'warn':'ok');
+  });
+
+  ventas.forEach(f => {
+    const is=f.issues||[]; const sorted=is.slice().sort((a,b)=>a.y*10000+a.m*100+(a.day||0)-(b.y*10000+b.m*100+(b.day||0)));
+    add('Días donde Total ≠ Efectivo + Tarjeta — '+f.localName,is.length,is.length?tbl(['Hoja','Fila','Día','Efectivo','Tarjeta','Total','Diferencia'],sorted.slice(0,300).map(x=>`<tr><td>${esc(x.sheet)}</td><td>${x.row}</td><td>${x.day||'—'}</td><td class="r">${money(x.ef)}</td><td class="r">${money(x.ta)}</td><td class="r">${money(x.tot)}</td><td class="r ${cls(x.tot-x.ef-x.ta)}">${signMoney(x.tot-x.ef-x.ta)}</td></tr>`)):'<p class="p-4 text-[13px] pos">En todos los días el total es efectivo + tarjeta.</p>',is.length?'warn':'ok');
+  });
+
+  S.files.filter(f=>f.kind==='gastos').forEach(f => {
+    const a=f.audits||[]; const inf=f.flags||[];
+    add('Gastos: sumas contra subtotales — '+f.localName,a.length,a.length?tbl(['Hoja','Detalle'],a.map(x=>`<tr><td>${esc(x.sheet)}</td><td style="white-space:normal">${x.what}</td></tr>`)):'<p class="p-4 text-[13px] pos">Todos los movimientos suman exactamente lo que dicen los subtotales y totales de cada hoja.</p>',a.length?'warn':'ok');
+    if(inf.length) add('Gastos con fecha de otro mes — '+f.localName,inf.length,tbl(['Hoja','Fila','Detalle'],inf.map(x=>`<tr><td>${esc(x.sheet)}</td><td>${x.row}</td><td>${esc(x.raw)}</td></tr>`)),'info');
+  });
+
+  S.files.filter(f=>f.kind==='gastos').forEach(f => {
+    const coverage=f.monthCoverage||[];
+    const empty=coverage.filter(m=>!m.movements && (m.total===0 || m.total===null));
+    add('Gastos: hojas mensuales sin movimientos — '+f.localName,empty.length,empty.length?tbl(['Hoja','Movimientos detectados','Total de la hoja','Interpretación'],empty.map(m=>`<tr><td>${esc(m.sheet)}</td><td class="r">${m.movements}</td><td class="r">${m.total===null?'No detectado':money(m.total)}</td><td class="dimmer">Sin movimientos reconocidos; confirmar si el mes está pendiente o realmente no tuvo gastos.</td></tr>`)):'<p class="p-4 text-[13px] pos">Todas las hojas mensuales tienen movimientos detectados.</p>',empty.length?'info':'ok');
+  });
+
+  ventas.forEach(f => {
+    const dr=f.dropped||[], dp=f.dup||[];
+    if(dr.length||dp.length) add('Filas o meses que no se pudieron ubicar — '+f.localName,dr.length+dp.length,tbl(['Tipo','Detalle'],[...dr.map(x=>`<tr><td>Fila sin mes</td><td>${esc(x.sheet)} fila ${x.row}: ${money(x.tot)}</td></tr>`),...dp.map(x=>`<tr><td>Mes repetido</td><td>${x.month} en hojas: ${esc(x.sheets.join(', '))} — se usó la de mayor importe</td></tr>`)]),'warn');
+    const fb=f.graficoFallbackMonths||[];
+    if(fb.length) add('Ventas mensuales tomadas de GRAFICO — '+f.localName,fb.length,tbl(['Mes','Origen','Importe mensual'],fb.map(k=>{const [y,m]=k.split('-').map(Number);return `<tr><td>${MONTHS[m-1]} ${y}</td><td>GRAFICO (sin detalle diario)</td><td class="r">${money(f.grafico[k])}</td></tr>`})),'info');
+  });
+
+  const warnN=secs.filter(s=>s.sev==='warn').length;
+  $('auditBox').innerHTML=`<div class="card p-4 text-[13.5px] ${warnN?'warn':'pos'}">${warnN?`Hay ${warnN} puntos para revisar en tus Excel. Abrí cada sección para ver el detalle.`:'No se encontraron inconsistencias entre tus planillas y la suma de los días.'}</div>`+
+    secs.map(s=>`<details class="aud" ${s.sev==='warn'&&s.count<=40?'open':''}><summary><span class="${s.sev==='warn'?'warn':s.sev==='ok'?'pos':'dimmer'}">${s.sev==='warn'?'⚠':s.sev==='ok'?'✓':'ℹ'}</span><span>${esc(s.title)}</span>${s.count?`<span class="badge b-g" style="margin-left:auto">${s.count}</span>`:''}</summary>${s.html}</details>`).join('');
+}
+
+/* =================== Exportaciones para presentar =================== */
+function downloadBlob(blob, filename){
+  const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download=filename; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(url),1500);
+}
+function exportWorkbook(){
+  if(typeof XLSX==='undefined'){ showErr(['No se pudo cargar la librería de Excel. Revisá tu conexión y probá de nuevo.']); return; }
+  if(!S.files.length){ showInfo('Primero cargá los Excel de los locales.'); return; }
+  const wb=XLSX.utils.book_new();
+  const ventas=[['Local','Año','Mes','Día','Fecha','Efectivo','Tarjeta','Total','Archivo de origen']];
+  const gastos=[['Local','Año','Mes','Fecha','Categoría','Importe positivo','Archivo de origen']];
+  S.files.forEach(f=>{
+    if(f.kind==='ventas') (f.rows||[]).forEach(r=>ventas.push([f.localName,r.y,MONTHS_FULL[r.m-1]||r.m,r.day||'',`${String(r.day||'').padStart(2,'0')}/${String(r.m).padStart(2,'0')}/${r.y}`,r.ef||0,r.ta||0,r.tot||0,f.fileName]));
+    if(f.kind==='gastos') (f.rows||[]).forEach(r=>gastos.push([f.localName,f.year||'',MONTHS_FULL[r.m-1]||r.m,r.date instanceof Date&&!isNaN(r.date)?r.date.toLocaleDateString('es-AR'):'',r.cat,Math.abs(Number(r.amount)||0),f.fileName]));
+  });
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(ventas),'Ventas detalle');
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(gastos),'Gastos detalle');
+  const resumen=[['Local','Año','Mes','Ventas','Compras mercadería','Gastos operativos','Total gastos','Resultado estimado','Margen estimado %','Estado de cobertura']];
+  locals().forEach(l=>{
+    const vf=salesFile(l.key), gf=gastosFile(l.key); const M=localMonthly(l.key); const G=gf?localGastos(l.key,gf.year):null;
+    const years=[...new Set([...Object.keys(M).map(Number),...(gf&&gf.year?[gf.year]:[])])].sort((a,b)=>a-b);
+    years.forEach(y=>MONTHS_FULL.forEach((mn,i)=>{
+      const v=M[y]&&M[y][i], g=(gf&&gf.year===y&&G)?G[i]:null;
+      if(!(v&&v.has)&&!(g&&g.has)) return;
+      const complete=!!(v&&v.has&&g&&g.has); const merch=g?g.merc:0, oper=g?g.oper:0, total=merch+oper, util=complete?v.tot-total:null;
+      resumen.push([l.name,y,mn,v&&v.has?v.tot:'',g&&g.has?merch:'',g&&g.has?oper:'',g&&g.has?total:'',util==null?'':util,complete&&v.tot?v.tot?util/v.tot*100:0:'',complete?'Completo':'Faltan datos']);
+    }));
+  });
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(resumen),'Resumen mensual');
+  const aud=[['Local','Tipo','Archivo','Fecha de carga']];
+  S.files.forEach(f=>aud.push([f.localName,f.kind==='ventas'?'Ventas':'Gastos',f.fileName,f.loadedAt instanceof Date?f.loadedAt.toLocaleString('es-AR'):String(f.loadedAt||'')]));
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(aud),'Archivos y control');
+  const date=new Date().toISOString().slice(0,10); XLSX.writeFile(wb,`Panel_Tabaquerias_${date}.xlsx`);
+  showInfo('Excel exportado con detalle de ventas, gastos, resumen mensual y archivos cargados. Revisá las filas marcadas “Faltan datos” antes de presentar utilidades.');
+}
+$('exportXlsxBtn').addEventListener('click',exportWorkbook);$('exportPdfBtn').addEventListener('click',()=>{
+  if(!S.files.length){ showInfo('Primero cargá los Excel de los locales.'); return; }
+  const prior=S.tab; S.tab='gastos'; renderAll();
+  showInfo('En la ventana de impresión elegí “Guardar como PDF”. Para incluir el detalle de ventas o auditoría, seleccioná esa pestaña antes de exportar.');
+  window.print();
+  S.tab=prior; renderAll();
+});
+
+
+/* =================== Render general =================== */
+function renderAll(){
+  persistFiles(); updateRestoreButton(); updatePublishBtn();
+  const has=S.files.length>0;
+  $('emptyState').classList.toggle('hidden',has);$('dash').classList.toggle('hidden',!has);
+  if(!has){ killAll(); return; }
+  const ys=syncState(); renderFileList(); syncControls(ys);
+  const keep = S.tab==='ventas' ? ['line','annual','var'] : S.tab==='gastos' ? ['gbar','gdonut','gstack'] : [];
+  Object.keys(S.charts).forEach(k=>{ if(!keep.includes(k) && S.charts[k]){ S.charts[k].destroy(); S.charts[k]=null; } });
+  if(S.tab==='ventas') renderVentas(); else if(S.tab==='gastos') renderGastos(); else renderAudit();
+}
+// Recuperación automática al abrir o recargar el archivo HTML en el mismo navegador.
+// Los datos se cargan después de ingresar (desde la nube; el administrador además puede recuperar su copia local).
+updateRestoreButton();
+renderAll();
+</script>
+</body>
+</html>
